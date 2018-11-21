@@ -16,8 +16,8 @@
   (c-sdl-gl-createcontext *window*))
 
 (c-glewinit)
-(c-gl-enable +gl_depth_test+)
-(c-gl-depthfunc +gl_less+)
+;;(c-gl-enable +gl_depth_test+)
+;;(c-gl-depthfunc +gl_less+)
 
 
 (progn
