@@ -18,17 +18,13 @@
 (c-glewinit)
 (c-gl-enable +gl_depth_test+)
 (c-gl-depthfunc +gl_less+)
-(c-glClearColor 0.0 0.0 0.4 0.0)
 
-(c-glClear (logior +GL_COLOR_BUFFER_BIT+ +GL_DEPTH_BUFFER_BIT+))
-(c-sdl-gl-swapwindow *window*)
 
 (progn
   (c-glClearColor 0.0 0.0 0.4 0.0)
-  (c-glClear +GL_COLOR_BUFFER_BIT+))
-(progn
-  (c-glfwPollEvents)
-  (c-glfwswapbuffers *window*))
+  (c-glClear (logior +GL_COLOR_BUFFER_BIT+ +GL_DEPTH_BUFFER_BIT+)))
+(c-sdl-gl-swapwindow *window*)
+
 
 (defparameter *triangle-points-buffer*
   (float-buffer
