@@ -105,14 +105,38 @@
 
 ;; ---------OpenGL------------
 (defparameter +GL_FLOAT+ #x1406)
-(defparameter +GL-TRUE+ 1)
-(defparameter +GL-FALSE+ 0)
+(defparameter +GL_TRUE+ 1)
+(defparameter +GL_FALSE+ 0)
 (defparameter +GL_STATIC_DRAW+ #x88E4)
 (defparameter +GL_ARRAY_BUFFER+ #x8892)
 (defparameter +GL_COLOR_BUFFER_BIT+ #x00004000)
 (defparameter +GL_DEPTH_BUFFER_BIT+ #x00000100)
 (defparameter +GL_LESS+ #x0201)
 (defparameter +GL_DEPTH_TEST+ #x0B71)
+(defparameter +GL_TRIANGLES+ #x0004)
+(defparameter +GL_FRAGMENT_SHADER+ #x8B30)
+(defparameter +GL_VERTEX_SHADER+ #x8B31)
+(defparameter +GL_VERSION+ #x1F02)
+
+
+;; types
+(cffi:defctype :gl-enum :uint)
+(cffi:defctype :gl-bitfield :ulong)
+(cffi:defctype :gl-sizei :int)
+(cffi:defctype :gl-boolean :uchar)
+
+;; void glGenVertexArrays(GLsizei n, GLuint *arrays);
+(cffi:defcfun (c-gl-gen-vertex-arrays "glGenVertexArrays") :void
+  (n :gl-sizei) (arrays-ptr :pointer))
+
+(defun glgen-vertex-array-1 ()
+  (cffi:with-foreign-object (new-array :uint)
+    (c-gl-gen-vertex-arrays 1 new-array)
+    (cffi:mem-ref new-array :uint)))
+
+;; void glBindVertexArray(GLuint array);
+(cffi:defcfun (c-gl-bind-vertex-array "glBindVertexArray") :void
+  (array-id :uint))
 
 ;; typedef int GLsizei;
 ;; typedef unsigned int GLuint;
@@ -120,9 +144,9 @@
 (cffi:defcfun (c-glGenBuffers "glGenBuffers") :void
   (n :int) (buffers :pointer))
 (defun glgenbuffer-1 ()
-  (cffi:with-foreign-object (new-buffer :int)
+  (cffi:with-foreign-object (new-buffer :uint)
     (c-glgenbuffers 1 new-buffer)
-    (cffi:mem-ref new-buffer :int)))
+    (cffi:mem-ref new-buffer :uint)))
 
 ;; typedef unsigned int GLenum;
 ;; void glBindBuffer(GLenum target, GLuint buffer);
@@ -139,20 +163,25 @@
 (cffi:defcfun (c-glEnableVertexAttribArray "glEnableVertexAttribArray") :void
   (index :uint))
 
+;; void glDisableVertexAttribArray(GLuint index);
+(cffi:defcfun (c-gl-disable-vertex-attrib-array "glDisableVertexAttribArray") :void
+  (index :uint))
+
 ;; typedef unsigned char GLboolean;
-;; void glVertexAttribPointer(GLuint index,
+;; void glVertexAttribPointer(
+;;      GLuint index,
 ;;  	GLint size,
 ;;  	GLenum type,
 ;;  	GLboolean normalized,
 ;;  	GLsizei stride,
 ;; 	const GLvoid * pointer);
 (cffi:defcfun (c-glVertexAttribPointer "glVertexAttribPointer") :void
-  (index :uint) (size :int) (type :uint)
-  (normalized :uchar) (stride :long) (pointer :pointer))
+  (index :uint) (size :int) (type :gl-enum)
+  (normalized :gl-boolean) (stride :gl-sizei) (pointer :pointer))
 
 ;; void glClear(GLbitfield mask);
 (cffi:defcfun (c-glClear "glClear") :void
-  (mask :ulong))
+  (mask :gl-bitfield))
 
 ;; void glClearColor(GLclampf red,  GLclampf green,  GLclampf blue,  GLclampf alpha);
 ;; typedef float GLclampf;
@@ -160,7 +189,78 @@
   (red :float) (green :float) (blue :float) (alpha :float))
 
 ;; void glEnable(GLenum cap);
-(cffi:defcfun (c-gl-enable "glEnable") :void (cap :uint))
+(cffi:defcfun (c-gl-enable "glEnable") :void (cap :gl-enum))
 
 ;; void glDepthFunc(GLenum func);
-(cffi:defcfun (c-gl-depthfunc "glDepthFunc") :void (func :uint))
+(cffi:defcfun (c-gl-depthfunc "glDepthFunc") :void (func :gl-enum))
+
+;; void glDrawArrays(GLenum mode, GLint first, GLsizei count);
+(cffi:defcfun (c-gl-draw-arrays "glDrawArrays") :void
+  (mode :gl-enum) (first :int) (count :gl-sizei))
+
+;; GLenum glGetError(void);
+(cffi:defcfun (c-gl-get-error "glGetError") :gl-enum)
+
+;;  const GLubyte *glGetString(GLenum name);
+(cffi:defcfun (c-gl-get-string "glGetString") :pointer
+  (name :gl-enum))
+
+;;;; -------------------- shaders -----------------------
+
+;; GLuint glCreateShader(GLenum shaderType);
+(cffi:defcfun (c-gl-create-shader "glCreateShader") :uint
+  (shader-type :gl-enum))
+
+;; void glShaderSource(GLuint shader, GLsizei count,
+;;                     const GLchar **string, const GLint *length);
+(cffi:defcfun (c-gl-shader-source "glShaderSource") :void
+  (shader-id :uint) (count :gl-sizei) (string-** :pointer) (length-* :pointer))
+
+;; void glCompileShader(GLuint shader);
+(cffi:defcfun (c-gl-compile-shader "glCompileShader") :void
+  (shader-id :uint))
+
+(defun compile-shader-from-string (shader-type lisp-string)
+  "Return shader ID"
+  (let ((shader-id (c-gl-create-shader shader-type)))
+    (if (= 0 shader-id)
+        (error "Unable to create shader"))
+    (cffi:with-foreign-string (cstring lisp-string)
+      (cffi:with-foreign-object (cstring-p :pointer)
+        (setf (cffi:mem-ref cstring-p :pointer) cstring)
+        (c-gl-shader-source shader-id 1 cstring-p null-pointer)
+        (c-gl-compile-shader shader-id)))
+    (format t "compile error code:~A~%" (c-gl-get-error))
+    shader-id))
+
+;; (let ((shader-id (c-gl-create-shader +gl_vertex_shader+)))
+;;   (cffi:with-foreign-string (cstring *vertex-shader-string*)
+;;     (cffi:with-foreign-object (cstring-p :pointer)
+;;       (setf (cffi:mem-ref cstring-p :pointer) cstring)
+;;       (c-gl-shader-source shader-id 1 cstring-p null-pointer)))
+;;   shader-id)
+;; (c-gl-compile-shader 3)
+;; (c-gl-get-error)
+
+;; GLuint glCreateProgram(void);
+(cffi:defcfun (c-gl-create-program "glCreateProgram") :uint)
+
+;; void glAttachShader(GLuint program, GLuint shader);
+(cffi:defcfun (c-gl-attach-shader "glAttachShader") :void
+  (program-id :uint) (shader-id :uint))
+
+;; void glLinkProgram( 	GLuint program);
+(cffi:defcfun (c-gl-link-program "glLinkProgram") :void
+  (program-id :uint))
+
+(defun create-program-with-shaders (vs fs)
+  (let ((program-id (c-gl-create-program)))
+    (c-gl-attach-shader program-id vs)
+    (c-gl-attach-shader program-id fs)
+    (c-gl-link-program program-id)
+    ;; todo: detach shaders
+    program-id))
+
+;; void glUseProgram(GLuint program);
+(cffi:defcfun (c-gl-use-program "glUseProgram") :void
+  (program-id :uint))
