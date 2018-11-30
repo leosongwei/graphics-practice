@@ -121,7 +121,7 @@
 
 ;; types
 (cffi:defctype :gl-enum :uint)
-(cffi:defctype :gl-bitfield :ulong)
+(cffi:defctype :gl-bitfield :uint)
 (cffi:defctype :gl-sizei :int)
 (cffi:defctype :gl-boolean :uchar)
 
