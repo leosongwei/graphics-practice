@@ -156,11 +156,11 @@
 ;; void glBufferData(GLenum target, GLsizeiptr size, const GLvoid * data, GLenum usage);
 ;; glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data),
 ;;              g_vertex_buffer_data, GL_STATIC_DRAW);
-(cffi:defcfun (c-glBufferData "glBufferData") :void
+(cffi:defcfun (c-gl-buffer-data "glBufferData") :void
   (target :uint) (size :long) (data :pointer) (usage :uint))
 
 ;; void glEnableVertexAttribArray(GLuint index);
-(cffi:defcfun (c-glEnableVertexAttribArray "glEnableVertexAttribArray") :void
+(cffi:defcfun (c-gl-enable-vertex-attrib-array "glEnableVertexAttribArray") :void
   (index :uint))
 
 ;; void glDisableVertexAttribArray(GLuint index);

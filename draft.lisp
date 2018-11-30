@@ -66,15 +66,20 @@ color = vec3(1,0,0); // red
        1.0 -1.0  0.0
        0.0  1.0  0.0)))
 
+  ;; generate VAO
   (defparameter *vertex-array* (glgen-vertex-array-1))
+  (format t "*vertex-array*: ~A~%" *vertex-array*)
   (c-gl-bind-vertex-array *vertex-array*)
 
-  (progn
-    (defparameter *vertex-buffer* (glgenbuffer-1))
-    (c-glbindbuffer +GL_ARRAY_BUFFER+ *vertex-buffer*)
-    (c-glbufferdata +GL_ARRAY_BUFFER+ (* 4 9) *triangle-points-buffer* +gl_static_draw+))
+  ;; generate VBO
+  (defparameter *vertex-buffer* (glgenbuffer-1))
+  (c-glbindbuffer +GL_ARRAY_BUFFER+ *vertex-buffer*)
+  ;; send data to VBO
+  (c-gl-buffer-data +GL_ARRAY_BUFFER+ (* 4 9)
+                    *triangle-points-buffer* +gl_static_draw+)
 
-  (c-glenablevertexattribarray 0)
+  ;;;; draw
+  (c-gl-enable-vertex-attrib-array 0)
   (c-glbindbuffer +GL_ARRAY_BUFFER+ *vertex-buffer*)
   (c-glVertexAttribPointer 0 3 +GL_FLOAT+ +GL_FALSE+ 0 null-pointer)
   (c-gl-draw-arrays +gl_triangles+ 0 3)
