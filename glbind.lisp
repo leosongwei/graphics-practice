@@ -120,7 +120,8 @@
 (defparameter +GL_FRAGMENT_SHADER+ #x8B30)
 (defparameter +GL_VERTEX_SHADER+ #x8B31)
 (defparameter +GL_VERSION+ #x1F02)
-
+(defparameter +GL_COMPILE_STATUS+ #x8B81)
+(defparameter +GL_INFO_LOG_LENGTH+ #x8B84)
 
 ;; types
 (cffi:defctype :gl-enum :uint)
@@ -228,6 +229,14 @@
 (cffi:defcfun (c-gl-compile-shader "glCompileShader") :void
   (shader-id :uint))
 
+;; void glGetShaderiv(GLuint shader, GLenum pname, GLint *params);
+(cffi:defcfun (c-gl-get-shader-iv "glGetShaderiv") :void
+  (shader-id :uint) (parameter-name :gl-enum) (parameters-pointer :pointer))
+
+;; void glGetShaderInfoLog(GLuint shader, GLsizei maxLength, GLsizei *length, GLchar *infoLog);
+(cffi:defcfun (c-gl-get-shader-info-log "glGetShaderInfoLog") :void
+  (shader-id :uint) (max-length :gl-sizei) (length-pointer :pointer) (log-buffer :pointer))
+
 (defun compile-shader-from-string (shader-type lisp-string)
   "Return shader ID"
   (let ((shader-id (c-gl-create-shader shader-type)))
@@ -238,7 +247,17 @@
         (setf (cffi:mem-ref cstring-p :pointer) cstring)
         (c-gl-shader-source shader-id 1 cstring-p null-pointer)
         (c-gl-compile-shader shader-id)))
-    (format t "compile error code:~A~%" (c-gl-get-error))
+    (cffi:with-foreign-object (compile-status :int)
+      (c-gl-get-shader-iv shader-id +GL_COMPILE_STATUS+ compile-status)
+      (if (= +GL_FALSE+ (cffi:mem-ref compile-status :int))
+          (cffi:with-foreign-object (log-length :int)
+            (c-gl-get-shader-iv shader-id +GL_INFO_LOG_LENGTH+ log-length)
+            (let ((length (cffi:mem-ref log-length :int)))
+              (format t "Shader compile error:~%")
+              (format t "Compile log length: ~A~%" length)
+              (cffi:with-foreign-object (log-buffer :char length)
+                (c-gl-get-shader-info-log shader-id length null-pointer log-buffer)
+                (format t "Compile log:~%~A~%" (cffi:foreign-string-to-lisp log-buffer)))))))
     shader-id))
 
 ;; (let ((shader-id (c-gl-create-shader +gl_vertex_shader+)))
@@ -248,7 +267,7 @@
 ;;       (c-gl-shader-source shader-id 1 cstring-p null-pointer)))
 ;;   shader-id)
 ;; (c-gl-compile-shader 3)
-;; (c-gl-get-error)
+
 
 ;; GLuint glCreateProgram(void);
 (cffi:defcfun (c-gl-create-program "glCreateProgram") :uint)
