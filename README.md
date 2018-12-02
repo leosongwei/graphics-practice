@@ -20,5 +20,6 @@ Load files: `sbcl --load triangle.lisp`
 * `color.lisp`
   - The color of the quad changing over time.
   - Passing color value to Shader program using uniform
+  - 2 different Shader programs
   - <img src="img/color.png" width=200 />
 
