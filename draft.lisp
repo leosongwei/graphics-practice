@@ -79,10 +79,19 @@ color = vec3(1,0,0); // red
                     *triangle-points-buffer* +gl_static_draw+)
 
   ;;;; draw
-  (c-gl-enable-vertex-attrib-array 0)
-  (c-gl-bind-buffer +GL_ARRAY_BUFFER+ *vertex-buffer*)
+  ;; bind array
+  (c-gl-bind-vertex-array *vertex-array*)
+
+  ;; set shader vertex attrib pointer
   (c-gl-vertex-attrib-pointer 0 3 +GL_FLOAT+ +GL_FALSE+ 0 null-pointer)
+  (c-gl-enable-vertex-attrib-array 0)
+
+  ;; bind buffer
+  (c-gl-bind-buffer +GL_ARRAY_BUFFER+ *vertex-buffer*)
+  ;; draw array
   (c-gl-draw-arrays +gl_triangles+ 0 3)
+
+  ;; disable shader vertex attrib array
   (c-gl-disable-vertex-attrib-array 0)
 
   (c-sdl-gl-swapwindow *window*))
