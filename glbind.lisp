@@ -13,6 +13,9 @@
   (cffi:foreign-alloc :float :initial-contents float-array))
 ;;(cffi:mem-aref (float-buffer #(1.0 2.0 3.0 4.0)) :float 1) => 2.0
 
+(defun cffi-buffer (element-type array)
+  (cffi:foreign-alloc element-type :initial-contents array))
+
 (defparameter null-pointer (cffi:null-pointer))
 
 (defmacro defenum (&body list)
@@ -107,11 +110,13 @@
   (window :pointer))
 
 ;; ---------OpenGL------------
+(defparameter +GL_UNSIGNED_INT+ #x1405)
 (defparameter +GL_FLOAT+ #x1406)
 (defparameter +GL_TRUE+ 1)
 (defparameter +GL_FALSE+ 0)
 (defparameter +GL_STATIC_DRAW+ #x88E4)
 (defparameter +GL_ARRAY_BUFFER+ #x8892)
+(defparameter +GL_ELEMENT_ARRAY_BUFFER+ #x8893)
 (defparameter +GL_COLOR_BUFFER_BIT+ #x00004000)
 (defparameter +GL_DEPTH_BUFFER_BIT+ #x00000100)
 (defparameter +GL_LESS+ #x0201)
@@ -207,6 +212,10 @@
 ;; void glDrawArrays(GLenum mode, GLint first, GLsizei count);
 (cffi:defcfun (c-gl-draw-arrays "glDrawArrays") :void
   (mode :gl-enum) (first :int) (count :gl-sizei))
+
+;; void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices);
+(cffi:defcfun (c-gl-draw-elements "glDrawElements") :void
+  (mode :gl-enum) (count :gl-sizei) (type :gl-enum) (indices-offset :pointer))
 
 ;; GLenum glGetError(void);
 (cffi:defcfun (c-gl-get-error "glGetError") :gl-enum)
