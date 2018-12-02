@@ -257,7 +257,9 @@
               (format t "Compile log length: ~A~%" length)
               (cffi:with-foreign-object (log-buffer :char length)
                 (c-gl-get-shader-info-log shader-id length null-pointer log-buffer)
-                (format t "Compile log:~%~A~%" (cffi:foreign-string-to-lisp log-buffer)))))))
+                (let ((log-string (cffi:foreign-string-to-lisp log-buffer)))
+                  ;; (format t "real string length: ~A~%" (length log-string))
+                  (format t "Compile log:~%~A~%" log-string)))))))
     shader-id))
 
 ;; (let ((shader-id (c-gl-create-shader +gl_vertex_shader+)))
