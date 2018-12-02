@@ -335,3 +335,19 @@
 ;; void glUseProgram(GLuint program);
 (cffi:defcfun (c-gl-use-program "glUseProgram") :void
   (program-id :uint))
+
+;; GLint glGetAttribLocation(GLuint program, const GLchar *name);
+(cffi:defcfun (c-gl-get-attrib-location "glGetAttribLocation") :int
+  (program-id :uint) (name-string :pointer))
+
+;; GLint glGetUniformLocation(GLuint program, const GLchar *name);
+(cffi:defcfun (c-gl-get-uniform-location "glGetUniformLocation") :int
+  (program-id :uint) (name-string :pointer))
+(defun gl-get-uniform-location (program-id name)
+  (cffi:with-foreign-string (name-string name)
+    (c-gl-get-uniform-location program-id name-string)))
+
+;; void glUniform4f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+(cffi:defcfun (c-gl-uniform-4f "glUniform4f") :void
+  (location :int) (v0 :float) (v1 :float) (v2 :float) (v3 :float))
+
