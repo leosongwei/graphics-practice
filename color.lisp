@@ -57,20 +57,53 @@ void main(){
     (compile-shader-from-string +GL_FRAGMENT_SHADER+ *fragment-shader-string*))
   (format t "fs id:~A~%" *fragment-shader-id*)
 
-  (defparameter *shader-program-id* (create-program-with-shaders *vertex-shader-id*
+  (defparameter *shader-1* (create-program-with-shaders *vertex-shader-id*
                                                                  *fragment-shader-id*))
   (defparameter *shader-uniform-location-color*
-    (gl-get-uniform-location *shader-program-id* "input_color"))
-  (format t "Shader color uniform location: ~A~%" *shader-uniform-location-color*)
-  (c-gl-use-program *shader-program-id*))
+    (gl-get-uniform-location *shader-1* "input_color"))
+  (format t "Shader color uniform location: ~A~%" *shader-uniform-location-color*))
+
+;;;; shader 2
+(progn
+  (defparameter *vertex-shader-string*
+    "#version 330 core
+layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 1) in vec3 vertexColor;
+
+out vec3 vColor;
+
+void main(){
+    gl_Position = vec4(vertexPosition_modelspace, 1.0);
+    vColor = vertexColor;
+}
+")
+
+  (defparameter *fragment-shader-string*
+    "#version 330 core
+in vec3 vColor;
+out vec3 color;
+
+void main(){
+    color = vColor;
+}
+")
+
+  (defparameter *vertex-shader-2-id*
+    (compile-shader-from-string +GL_VERTEX_SHADER+ *vertex-shader-string*))
+  (format t "vs 2 id:~A~%" *vertex-shader-2-id*)
+  (defparameter *fragment-shader-2-id*
+    (compile-shader-from-string +GL_FRAGMENT_SHADER+ *fragment-shader-string*))
+  (format t "fs 2 id:~A~%" *fragment-shader-2-id*)
+  (defparameter *shader-2* (create-program-with-shaders *vertex-shader-2-id*
+                                                        *fragment-shader-2-id*)))
 
 (progn
   (defparameter *quad-coords-buffer*
     (float-buffer
-     #(0.5  0.5  0.0
-       0.5 -0.5  0.0
-      -0.5 -0.5  0.0
-      -0.5  0.5  0.0)))
+     #(-0.1  0.4  0.0
+       -0.1 -0.4  0.0
+       -0.9 -0.4  0.0
+       -0.9  0.4  0.0)))
   (defparameter *quad-indices*
     (cffi-buffer
      :uint
@@ -98,20 +131,64 @@ void main(){
   (c-gl-vertex-attrib-pointer 0 3 +GL_FLOAT+ +GL_FALSE+ 0 null-pointer)
   (c-gl-enable-vertex-attrib-array 0)
 
+  ;; -----------
+
+  (defparameter *triangle-vertex-buffer*
+    (float-buffer
+     #(0.5  0.4  0.0 #||# 1.0 0.0 0.0
+       0.9 -0.4  0.0 #||# 0.0 1.0 0.0
+       0.1 -0.4  0.0 #||# 0.0 0.0 1.0)))
+  (defparameter *triangle-indices*
+    (cffi-buffer
+     :uint
+     #(0 1 2)))
+  ;; VAO 2
+  (defparameter *vao-2* (glgen-vertex-array-1))
+  (format t "*vertex-array*: ~A~%" *vao-2*)
+  (c-gl-bind-vertex-array *vao-2*)
+  ;; generate VBO
+  (defparameter *vbo-2* (gl-gen-buffer-1))
+  (c-gl-bind-buffer +GL_ARRAY_BUFFER+ *vbo-2*)
+  ;; send data to VBO
+  (c-gl-buffer-data +GL_ARRAY_BUFFER+ (* 4 18) ;; 6*3 = 18 float
+                    *triangle-vertex-buffer* +gl_static_draw+)
+  ;;; vertex attrib
+  ;; coord, layout location=0
+  (c-gl-vertex-attrib-pointer 0 3 +GL_FLOAT+ +GL_FALSE+
+                              (* 6 4) null-pointer)
+  (c-gl-enable-vertex-attrib-array 0)
+  ;; color, layout location=1
+  (c-gl-vertex-attrib-pointer 1 3 +GL_FLOAT+ +GL_FALSE+
+                              (* 6 4) (cffi:make-pointer (* 3 4)))
+  (c-gl-enable-vertex-attrib-array 1)
+  ;; EBO
+  (defparameter *ebo-2* (gl-gen-buffer-1))
+  (c-gl-bind-buffer +GL_ELEMENT_ARRAY_BUFFER+ *ebo-2*)
+  (c-gl-buffer-data +GL_ELEMENT_ARRAY_BUFFER+ (* 3 4)
+                    *triangle-indices* +GL_STATIC_DRAW+)
+
+
   ;;;; draw
   (let ((time 0.01))
     (loop
        (sleep 0.02)
        (incf time 0.02)
 
+       ;; draw quad
        (c-gl-bind-vertex-array *vertex-array*)
-
+       (c-gl-use-program *shader-1*)
        ;; set uniform
        (c-gl-uniform-4f *shader-uniform-location-color*
                         0.0 (+ 0.5 (/ (sin time) 2)) 0.0 1.0)
-
        ;; draw elements
        (c-gl-draw-elements +GL_TRIANGLES+ 6 +GL_UNSIGNED_INT+ null-pointer)
+
+       ;; ---------------
+
+       ;; draw triangle
+       (c-gl-bind-vertex-array *vao-2*)
+       (c-gl-use-program *shader-2*)
+       (c-gl-draw-elements +GL_TRIANGLES+ 3 +GL_UNSIGNED_INT+ null-pointer)
 
        (c-sdl-gl-swapwindow *window*))))
 
