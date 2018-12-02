@@ -141,16 +141,16 @@
 ;; typedef int GLsizei;
 ;; typedef unsigned int GLuint;
 ;; void glGenBuffers(GLsizei n, GLuint * buffers);
-(cffi:defcfun (c-glGenBuffers "glGenBuffers") :void
+(cffi:defcfun (c-gl-genbuffers "glGenBuffers") :void
   (n :int) (buffers :pointer))
-(defun glgenbuffer-1 ()
+(defun gl-gen-buffer-1 ()
   (cffi:with-foreign-object (new-buffer :uint)
-    (c-glgenbuffers 1 new-buffer)
+    (c-gl-genbuffers 1 new-buffer)
     (cffi:mem-ref new-buffer :uint)))
 
 ;; typedef unsigned int GLenum;
 ;; void glBindBuffer(GLenum target, GLuint buffer);
-(cffi:defcfun (c-glBindBuffer "glBindBuffer") :void
+(cffi:defcfun (c-gl-bind-Buffer "glBindBuffer") :void
   (target :uint) (buffer :int))
 
 ;; void glBufferData(GLenum target, GLsizeiptr size, const GLvoid * data, GLenum usage);
@@ -175,17 +175,17 @@
 ;;  	GLboolean normalized,
 ;;  	GLsizei stride,
 ;; 	const GLvoid * pointer);
-(cffi:defcfun (c-glVertexAttribPointer "glVertexAttribPointer") :void
+(cffi:defcfun (c-gl-vertex-attrib-pointer "glVertexAttribPointer") :void
   (index :uint) (size :int) (type :gl-enum)
   (normalized :gl-boolean) (stride :gl-sizei) (pointer :pointer))
 
 ;; void glClear(GLbitfield mask);
-(cffi:defcfun (c-glClear "glClear") :void
+(cffi:defcfun (c-gl-clear "glClear") :void
   (mask :gl-bitfield))
 
 ;; void glClearColor(GLclampf red,  GLclampf green,  GLclampf blue,  GLclampf alpha);
 ;; typedef float GLclampf;
-(cffi:defcfun (c-glClearColor "glClearColor") :void
+(cffi:defcfun (c-gl-clear-color "glClearColor") :void
   (red :float) (green :float) (blue :float) (alpha :float))
 
 ;; void glEnable(GLenum cap);

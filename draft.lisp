@@ -21,8 +21,8 @@
   ;;(c-gl-depthfunc +gl_less+)
 
   (progn
-    (c-glClearColor 0.0 0.0 0.4 0.0)
-    (c-glClear (logior +GL_COLOR_BUFFER_BIT+ +GL_DEPTH_BUFFER_BIT+)))
+    (c-gl-clear-color 0.0 0.0 0.4 0.0)
+    (c-gl-clear (logior +GL_COLOR_BUFFER_BIT+ +GL_DEPTH_BUFFER_BIT+)))
   (c-sdl-gl-swapwindow *window*))
 
 
@@ -72,16 +72,16 @@ color = vec3(1,0,0); // red
   (c-gl-bind-vertex-array *vertex-array*)
 
   ;; generate VBO
-  (defparameter *vertex-buffer* (glgenbuffer-1))
-  (c-glbindbuffer +GL_ARRAY_BUFFER+ *vertex-buffer*)
+  (defparameter *vertex-buffer* (gl-gen-buffer-1))
+  (c-gl-bind-buffer +GL_ARRAY_BUFFER+ *vertex-buffer*)
   ;; send data to VBO
   (c-gl-buffer-data +GL_ARRAY_BUFFER+ (* 4 9)
                     *triangle-points-buffer* +gl_static_draw+)
 
   ;;;; draw
   (c-gl-enable-vertex-attrib-array 0)
-  (c-glbindbuffer +GL_ARRAY_BUFFER+ *vertex-buffer*)
-  (c-glVertexAttribPointer 0 3 +GL_FLOAT+ +GL_FALSE+ 0 null-pointer)
+  (c-gl-bind-buffer +GL_ARRAY_BUFFER+ *vertex-buffer*)
+  (c-gl-vertex-attrib-pointer 0 3 +GL_FLOAT+ +GL_FALSE+ 0 null-pointer)
   (c-gl-draw-arrays +gl_triangles+ 0 3)
   (c-gl-disable-vertex-attrib-array 0)
 
