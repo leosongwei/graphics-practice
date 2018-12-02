@@ -125,6 +125,9 @@
 (cffi:defctype :gl-sizei :int)
 (cffi:defctype :gl-boolean :uchar)
 
+;; void glFlush(void);
+(cffi:defcfun (c-gl-flush "glFlush") :void)
+
 ;; void glGenVertexArrays(GLsizei n, GLuint *arrays);
 (cffi:defcfun (c-gl-gen-vertex-arrays "glGenVertexArrays") :void
   (n :gl-sizei) (arrays-ptr :pointer))
