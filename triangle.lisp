@@ -89,9 +89,6 @@ color = vec3(1,0,0); // red
   ;; draw array
   (c-gl-draw-arrays +gl_triangles+ 0 3)
 
-  ;; disable shader vertex attrib array
-  (c-gl-disable-vertex-attrib-array 0)
-
   (c-sdl-gl-swapwindow *window*))
 
 (c-gl-get-error)
