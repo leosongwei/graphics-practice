@@ -271,12 +271,18 @@
 ;;   shader-id)
 ;; (c-gl-compile-shader 3)
 
+;; void glDeleteShader(GLuint shader);
+(cffi:defcfun (c-gl-delete-shader "glDeleteShader") :void (shader-id :uint))
 
 ;; GLuint glCreateProgram(void);
 (cffi:defcfun (c-gl-create-program "glCreateProgram") :uint)
 
 ;; void glAttachShader(GLuint program, GLuint shader);
 (cffi:defcfun (c-gl-attach-shader "glAttachShader") :void
+  (program-id :uint) (shader-id :uint))
+
+;; void glDetachShader(GLuint program, GLuint shader);
+(cffi:defcfun (c-gl-detach-shader "glDetachShader") :void
   (program-id :uint) (shader-id :uint))
 
 ;; void glLinkProgram( 	GLuint program);
@@ -295,10 +301,15 @@
 
 (defun create-program-with-shaders (vs fs)
   (let ((program-id (c-gl-create-program)))
+    ;; attach shaders
     (c-gl-attach-shader program-id vs)
     (c-gl-attach-shader program-id fs)
+    ;; link
     (c-gl-link-program program-id)
-    ;; todo: detach shaders
+    ;; detach shaders
+    (c-gl-detach-shader program-id vs)
+    (c-gl-detach-shader program-id fs)
+    ;; check if link error
     (cffi:with-foreign-object (link-status :int)
       (c-gl-get-program-iv program-id +GL_LINK_STATUS+ link-status)
       (if (= +GL_FALSE+ (cffi:mem-ref link-status :int))
