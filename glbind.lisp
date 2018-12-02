@@ -127,6 +127,8 @@
 
 ;; void glFlush(void);
 (cffi:defcfun (c-gl-flush "glFlush") :void)
+;; void glFinish(void);
+(cffi:defcfun (c-gl-flush "glFinish") :void)
 
 ;; void glGenVertexArrays(GLsizei n, GLuint *arrays);
 (cffi:defcfun (c-gl-gen-vertex-arrays "glGenVertexArrays") :void
