@@ -121,6 +121,7 @@
 (defparameter +GL_VERTEX_SHADER+ #x8B31)
 (defparameter +GL_VERSION+ #x1F02)
 (defparameter +GL_COMPILE_STATUS+ #x8B81)
+(defparameter +GL_LINK_STATUS+ #x8B82)
 (defparameter +GL_INFO_LOG_LENGTH+ #x8B84)
 
 ;; types
@@ -282,12 +283,33 @@
 (cffi:defcfun (c-gl-link-program "glLinkProgram") :void
   (program-id :uint))
 
+;; void glGetProgramiv(GLuint program, GLenum pname, GLint *params);
+(cffi:defcfun (c-gl-get-program-iv "glGetProgramiv") :void
+  (program-id :uint) (parameter-name :gl-enum) (parameters-pointer :pointer))
+
+
+;; void glGetProgramInfoLog(GLuint program, GLsizei maxLength,
+;;                          GLsizei *length, GLchar *infoLog);
+(cffi:defcfun (c-gl-get-program-info-log "glGetProgramInfoLog") :void
+  (program-id :uint) (max-length :gl-sizei) (length-pointer :gl-sizei) (info-log :pointer))
+
 (defun create-program-with-shaders (vs fs)
   (let ((program-id (c-gl-create-program)))
     (c-gl-attach-shader program-id vs)
     (c-gl-attach-shader program-id fs)
     (c-gl-link-program program-id)
     ;; todo: detach shaders
+    (cffi:with-foreign-object (link-status :int)
+      (c-gl-get-program-iv program-id +GL_LINK_STATUS+ link-status)
+      (if (= +GL_FALSE+ (cffi:mem-ref link-status :int))
+          (cffi:with-foreign-object (log-length :int)
+            (c-gl-get-program-iv program-id +GL_INFO_LOG_LENGTH+ log-length)
+            (let ((length (cffi:mem-ref log-length :int)))
+              (cffi:with-foreign-object (log-buffer :char length)
+                (c-gl-get-program-info-log program-id length null-pointer log-buffer)
+                (let ((log-string (cffi:foreign-string-to-lisp log-buffer)))
+                  (format t "Shader Link Error:~%")
+                  (format t "Link log:~%~A~%" log-string)))))))
     program-id))
 
 ;; void glUseProgram(GLuint program);
