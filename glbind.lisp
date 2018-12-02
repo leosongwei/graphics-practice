@@ -18,9 +18,12 @@
 (defmacro defenum (&body list)
   (append
    '(progn)
-   (let ((params '()))
-     (dotimes (i (length list))
-       (push `(defparameter ,(nth i list) ,i) params))
+   (let ((params '())
+         (index 0))
+     (dolist (e list)
+       (if (consp e) (setf index (cadr e)))
+       (push `(defparameter ,(if (consp e) (car e) e) ,index) params)
+       (incf index))
      params)))
 
 (defenum
