@@ -21,7 +21,7 @@
   ;;(c-gl-depthfunc +gl_less+)
 
   (progn
-    (c-gl-clear-color 0.0 0.0 0.4 0.0)
+    (c-gl-clear-color 0.2 0.2 0.2 0.0)
     (c-gl-clear (logior +GL_COLOR_BUFFER_BIT+ +GL_DEPTH_BUFFER_BIT+)))
   (c-sdl-gl-swapwindow *window*))
 

@@ -21,7 +21,7 @@
   ;;(c-gl-depthfunc +gl_less+)
 
   (progn
-    (c-gl-clear-color 0.0 0.0 0.4 0.0)
+    (c-gl-clear-color 0.2 0.2 0.2 0.0)
     (c-gl-clear (logior +GL_COLOR_BUFFER_BIT+ +GL_DEPTH_BUFFER_BIT+)))
   (c-sdl-gl-swapwindow *window*))
 
@@ -81,12 +81,12 @@ color = vec3(1,0,0); // red
   (defparameter *vertex-buffer* (gl-gen-buffer-1))
   (c-gl-bind-buffer +GL_ARRAY_BUFFER+ *vertex-buffer*)
   ;; send data to VBO
-  (c-gl-buffer-data +GL_ARRAY_BUFFER+ (* 4 12)
+  (c-gl-buffer-data +GL_ARRAY_BUFFER+ (* 4 12) ;; 3*4 = 12 float
                     *quad-coords-buffer* +gl_static_draw+)
   ;; generate EBO (element array buffer)
   (defparameter *ebo* (gl-gen-buffer-1))
   (c-gl-bind-buffer +GL_ELEMENT_ARRAY_BUFFER+ *ebo*)
-  (c-gl-buffer-data +GL_ELEMENT_ARRAY_BUFFER+ (* 4 6)
+  (c-gl-buffer-data +GL_ELEMENT_ARRAY_BUFFER+ (* 4 6) ;; 6 uint
                     *quad-indices* +GL_STATIC_DRAW+)
 
   ;; set shader vertex attrib pointer
