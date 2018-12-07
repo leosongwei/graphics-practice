@@ -7,6 +7,8 @@ Requirement:
 
 * SBCL
 * SDL2
+* cl-png
+  - libpng12
 * Linux
 
 Load files: `sbcl --load triangle.lisp`
@@ -22,4 +24,7 @@ Load files: `sbcl --load triangle.lisp`
   - Passing color value to Shader program using uniform
   - 2 different Shader programs
   - <img src="img/color.png" width=200 />
+* `texture.lisp`
+  - load texture
+  - <img src="img/texture.png" width=200/>
 

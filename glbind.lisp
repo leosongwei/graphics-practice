@@ -6,12 +6,53 @@
 (cffi:use-foreign-library "libGLX.so")
 (cffi:use-foreign-library "libSDL2.so")
 
+;; (aref img y x c)
+(defmacro with-png-buffer (buffer-name file-name width height &body body)
+  (let ((image (gensym))
+        (input (gensym))
+        (channels (gensym))
+        (buffer-size (gensym))
+        (x (gensym)) (y (gensym)) (c (gensym)))
+    `(let* ((,image (with-open-file (,input ,file-name
+                                            :element-type '(unsigned-byte 8))
+                      (png:decode ,input)))
+            (,width (png:image-width ,image))
+            (,height (png:image-height ,image))
+            (,channels (png:image-channels ,image))
+            (,buffer-size (* ,width ,height ,channels)))
+       (cffi:with-foreign-object (,buffer-name :uint8 ,buffer-size)
+         (dotimes (,x ,width)
+           (dotimes (,y ,height)
+             (dotimes (,c ,channels)
+               (setf (cffi:mem-aref ,buffer-name :uint8
+                                    (+ ,c
+                                       (* ,x ,channels)
+                                       (* ,y (* ,width ,channels))))
+                     (aref ,image (- ,height ,y 1) ,x ,c)))))
+         ,@body))))
+
+
+(defun c-sizeof (type)
+  (cffi:foreign-type-size type))
+
 ;; GLenum glewErr = glewInit();
 (cffi:defcfun (c-glewinit "glewInit") :uint)
 
 (defun float-buffer (float-array)
   (cffi:foreign-alloc :float :initial-contents float-array))
 ;;(cffi:mem-aref (float-buffer #(1.0 2.0 3.0 4.0)) :float 1) => 2.0
+
+(defun alloc-mat44f ()
+  (cffi:foreign-alloc :float :count 16))
+
+(defun update-mat44f-buffer (mat44 buffer)
+  ;; row-major
+  (dotimes (i 4)
+    (dotimes (j 4)
+      (let ((pos (+ j (* i 4))))
+        (setf (cffi:mem-aref buffer :float pos)
+              (aref mat44 i j)))))
+  buffer)
 
 (defun cffi-buffer (element-type array)
   (cffi:foreign-alloc element-type :initial-contents array))
@@ -110,8 +151,13 @@
   (window :pointer))
 
 ;; ---------OpenGL------------
+(defparameter +GL_TEXTURE_2D+ #x0DE1)
+(defparameter +GL_UNSIGNED_BYTE+ #x1401)
 (defparameter +GL_UNSIGNED_INT+ #x1405)
 (defparameter +GL_FLOAT+ #x1406)
+(defparameter +GL_NEAREST+ #x2600)
+(defparameter +GL_TEXTURE_MAG_FILTER+ #x2800)
+(defparameter +GL_TEXTURE_MIN_FILTER+ #x2801)
 (defparameter +GL_TRUE+ 1)
 (defparameter +GL_FALSE+ 0)
 (defparameter +GL_STATIC_DRAW+ #x88E4)
@@ -128,6 +174,9 @@
 (defparameter +GL_COMPILE_STATUS+ #x8B81)
 (defparameter +GL_LINK_STATUS+ #x8B82)
 (defparameter +GL_INFO_LOG_LENGTH+ #x8B84)
+(defparameter +GL_RGB+ #x1907)
+(defparameter +GL_RGBA+ #x1908)
+(defparameter +GL_TEXTURE0+ #x84C0)
 
 ;; types
 (cffi:defctype :gl-enum :uint)
@@ -347,7 +396,57 @@
   (cffi:with-foreign-string (name-string name)
     (c-gl-get-uniform-location program-id name-string)))
 
+;; void glUniform1i(GLint location, GLint v0);
+(cffi:defcfun (c-gl-uniform-1i "glUniform1i") :void
+  (location :int) (v0 :int))
+
 ;; void glUniform4f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
 (cffi:defcfun (c-gl-uniform-4f "glUniform4f") :void
   (location :int) (v0 :float) (v1 :float) (v2 :float) (v3 :float))
 
+;; void glUniformMatrix4fv(GLint location,
+;;        GLsizei count, GLboolean transpose,
+;;        const GLfloat *value);
+(cffi:defcfun (c-gl-uniform-matrix-4fv "glUniformMatrix4fv") :void
+  (location :int) (count :gl-sizei) (transpose :gl-boolean) (value-pointer :pointer))
+
+;; void glGenTextures(GLsizei n, GLuint * textures);
+(cffi:defcfun (c-gl-gen-textures "glGenTextures") :void
+  (n :gl-sizei) (textures-array :pointer))
+(defun gl-gen-texute-1 ()
+  (cffi:with-foreign-object (texture-id :int)
+    (c-gl-gen-textures 1 texture-id)
+    (cffi:mem-ref texture-id :int)))
+
+;; void glBindTexture(GLenum target, GLuint texture);
+(cffi:defcfun (c-gl-bind-texture "glBindTexture") :void
+  (target :gl-enum) (texture :int))
+
+;; void glTexImage2D
+;;(GLenum target,
+;; GLint level,
+;; GLint internalformat,
+;; GLsizei width,
+;; GLsizei height,
+;; GLint border,
+;; GLenum format,
+;; GLenum type,
+;; const GLvoid * data);
+;; Example: (https://github.com/JoeyDeVries/LearnOpenGL)
+;; glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+(cffi:defcfun (c-gl-tex-image-2d "glTexImage2D") :void
+  (target :gl-enum)
+  (level :int) ;; mipmap level
+  (internal-format :int) ;; OpenGL format: GL_RGB
+  (width :gl-sizei) (height :gl-sizei)
+  (border :int) ;; set to 0, (deprecated)
+  (format :gl-enum) ;; pixel data format
+  (type :gl-enum) ;; pixel data unit type
+  (data :pointer))
+
+;;  void glActiveTexture(GLenum texture);
+(cffi:defcfun (c-gl-active-texture "glActiveTexture") :void (texture :gl-enum))
+
+;; void glTexParameteri(GLenum target, GLenum pname, GLint param);
+(cffi:defcfun (c-gl-tex-parameter-i "glTexParameteri") :void
+  (target :gl-enum) (pname :gl-enum) (param :int))
