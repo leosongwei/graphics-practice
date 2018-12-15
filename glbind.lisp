@@ -1,4 +1,5 @@
-(ql:quickload 'cffi)
+(require :cffi)
+(require :png)
 
 (cffi:use-foreign-library "libGLEW.so")
 (cffi:use-foreign-library "libGLU.so")
@@ -355,7 +356,7 @@
 ;; void glGetProgramInfoLog(GLuint program, GLsizei maxLength,
 ;;                          GLsizei *length, GLchar *infoLog);
 (cffi:defcfun (c-gl-get-program-info-log "glGetProgramInfoLog") :void
-  (program-id :uint) (max-length :gl-sizei) (length-pointer :gl-sizei) (info-log :pointer))
+  (program-id :uint) (max-length :gl-sizei) (length-pointer :pointer) (info-log :pointer))
 
 (defun create-program-with-shaders (vs fs)
   (let ((program-id (c-gl-create-program)))
