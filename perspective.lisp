@@ -1,4 +1,5 @@
-(load "load-modules.lisp")
+(load "math.lisp")
+(load "glbind.lisp")
 
 (progn
   (c-sdl-init +sdl_init_video+)
@@ -24,16 +25,15 @@
     (c-gl-clear (logior +GL_COLOR_BUFFER_BIT+ +GL_DEPTH_BUFFER_BIT+)))
   (c-sdl-gl-swapwindow *window*))
 
-
-
 (progn
   (defparameter *vertex-shader-string*
     "#version 330 core
-layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location=0) in vec3 vpos;
+
+uniform mat4 trans_mat;
 
 void main(){
-    gl_Position.xyz = vertexPosition_modelspace;
-    gl_Position.w = 1.0;
+  gl_Position = project * view * model * vec4(vpos, 1.0f);
 }
 ")
 
@@ -43,7 +43,7 @@ void main(){
 out vec3 color;
 
 void main(){
-color = vec3(1,0,0); // red
+  color = vec3(0.8f, 0.1f, 0.1f);
 }
 ")
 
@@ -58,36 +58,5 @@ color = vec3(1,0,0); // red
                                                                  *fragment-shader-id*))
   (c-gl-use-program *shader-program-id*))
 
-(progn
-  (defparameter *triangle-points-buffer*
-    (float-buffer
-     #(-1.0 -1.0  0.0
-       1.0 -1.0  0.0
-       0.0  1.0  0.0)))
 
-  ;; generate VAO
-  (defparameter *vertex-array* (glgen-vertex-array-1))
-  (format t "*vertex-array*: ~A~%" *vertex-array*)
-  (c-gl-bind-vertex-array *vertex-array*)
 
-  ;; generate VBO
-  (defparameter *vertex-buffer* (gl-gen-buffer-1))
-  (c-gl-bind-buffer +GL_ARRAY_BUFFER+ *vertex-buffer*)
-  ;; send data to VBO
-  (c-gl-buffer-data +GL_ARRAY_BUFFER+ (* 4 9)
-                    *triangle-points-buffer* +gl_static_draw+)
-  ;; set shader vertex attrib pointer
-  (c-gl-vertex-attrib-pointer 0 3 +GL_FLOAT+ +GL_FALSE+ 0 null-pointer)
-  (c-gl-enable-vertex-attrib-array 0)
-
-  ;;;; draw
-  ;; bind VAO
-  ;; VAO is like a name space, once bind, will set all parameters,
-  ;; such as VBO bindings, vertex attrib pointers...
-  (c-gl-bind-vertex-array *vertex-array*)
-  ;; draw array
-  (c-gl-draw-arrays +gl_triangles+ 0 3)
-
-  (c-sdl-gl-swapwindow *window*))
-
-(c-gl-get-error)

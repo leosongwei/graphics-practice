@@ -1,5 +1,4 @@
-(load "math.lisp")
-(load "glbind.lisp")
+(load "load-modules.lisp")
 
 (progn
   (c-sdl-init +sdl_init_video+)
