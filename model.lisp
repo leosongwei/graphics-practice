@@ -272,3 +272,16 @@
 ;; 4:    0.5    -0.5    0.0    1.0    0.0    0.0    0.0    -1.0
 ;; 5:    -0.5    -0.5    0.0    0.0    0.0    0.0    0.0    -1.0
 ;; #(0 1 2 3 4 5)
+;; (mvb-let* ((vertices faces (modelmesh-to-array (wavefront-file-to-modelmesh "test1.obj"))))
+;;   (let ((vertex-num (/ (length vertices) 8)))
+;;     (dotimes (index vertex-num)
+;;       (format t "~A:" index)
+;;       (dotimes (i 8)
+;;         (format t "    ~A" (aref vertices (+ i (* index 8)))))
+;;       (format t "~%"))
+;;     (print faces)))
+;; 0:    -0.5    0.5    0.0    0.0    1.0    0.0    0.0    1.0
+;; 1:    0.5    0.5    0.0    1.0    1.0    0.0    0.0    1.0
+;; 2:    0.5    -0.5    0.0    1.0    0.0    0.0    0.0    1.0
+;; 3:    -0.5    -0.5    0.0    0.0    0.0    0.0    0.0    1.0
+;; #(0 1 2 0 2 3) 
