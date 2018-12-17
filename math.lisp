@@ -269,6 +269,18 @@ V4 : transpose(matrix([1.0, 2.0, 3.0, 4.0]));
   (make-array 3 :element-type 'single-float
               :initial-contents `(,x ,y ,z)))
 
+(defun vec3 (vec)
+  (declare (type (SIMPLE-ARRAY SINGLE-FLOAT *) vec))
+  (if (>= (length vec) 3)
+      (make-array 3 :element-type 'single-float
+                  :initial-contents `(,(aref vec 0)
+                                       ,(aref vec 1)
+                                       ,(aref vec 2)))
+      (let ((array (make-array 3 :element-type 'single-float)))
+        (dotimes (i (length vec))
+          (setf (aref array i) (aref vec i)))
+        array)))
+
 (defun vec3+ (vec1 vec2)
   (make-array 3 :element-type 'single-float
               :initial-contents
@@ -403,6 +415,10 @@ V4 : transpose(matrix([1.0, 2.0, 3.0, 4.0]));
 ;;      (setf (aref a 2) (+ 2.0 i))
 ;;      (setf (aref a 3) (+ 3.0 i))
 ;;      a)))
+
+;; other vectors
+(defun make-vec9 ()
+  (make-array 9 :element-type 'single-float))
 
 ;; -------------------------------------------
 

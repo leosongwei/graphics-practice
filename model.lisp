@@ -1,10 +1,3 @@
-;; (defstruct model
-;;   vertex
-;;   tex-coord
-;;   normals
-;;   faces
-;;   texture)
-
 (defun read-text-into-line-list (file-path)
   (with-open-file (stream file-path :direction :input
                           :if-does-not-exist :error)
@@ -118,7 +111,6 @@
   faces) ;; #(face),
 ;; face:#(int-vec3 int-vec3 int-vec3)
 ;;        coords   uvs      normals
-
 ;; vertex attribute index, 0-indexed, not like wavefront!!
 
 (defun make-model-from-wave-front (vertices tex-coords normals faces)
@@ -184,11 +176,7 @@
 ;;    :NORMALS #(#(0.707 0.0 0.707 0.0) #(0.707 0.0 0.707 0.0)
 ;;               #(0.707 0.0 0.707 0.0) #(0.707 0.0 0.707 0.0)
 ;;               #(0.707 0.0 0.707 0.0) #(0.707 0.0 0.707 0.0))
-;;    :FACES #(#(#(0 0 0) #(1 1 1) #(2 2 2)) #(#(3 3 3) #(4 4 4) #(5 5 5))))
-
-;;(defun modelmesh-to-arrays (modelmesh)
-
-
+;;    :FACES #(#(#(0 1 2) #(1 1 1) #(2 2 2)) #(#(3 3 3) #(4 4 4) #(5 5 5))))
 
 ;; (defun build-vertex-from-indexes (attrib-index world-coords ndc-coords normals tex-coords)
 ;;   (let ((coord-index (aref attrib-index 0))
@@ -207,3 +195,80 @@
 ;;         (v3 (build-vertex-from-indexes
 ;;              (aref face 2) world-coords ndc-coords normals tex-coords)))
 ;;     (build-triangle v1 v2 v3)))
+
+
+;; out format:
+;; vertices:
+;; (#(v v v uv uv n n n) ...)
+;; indices:
+;; (#(i i i) ...)
+(defun modelmesh-to-array (modelmesh)
+  (flet ((hash-attr (v)
+           (let ((vi (aref v 0)) (ui (aref v 1)) (ni (aref v 2)))
+             (+ (ash vi 64) (ash ui 32) ni))))
+    (let ((vertex-ht (make-hash-table))
+          (vertex-i-ht (make-hash-table))
+          (vertex-list nil) ;; (#(v v v uv uv n n n) ...) 8
+          (face-list nil))  ;; (#(i i i) ...)
+      ;; compact vertices
+      (doarray (f (modelmesh-faces modelmesh))
+        (doarray (indices f)
+          (let* (;; index
+                 (coord-i (aref indices 0))
+                 (uv-i (aref indices 1))
+                 (normal-i (aref indices 2))
+                 ;; vectors
+                 (coord (vec3 (aref (modelmesh-vertices modelmesh) coord-i)))
+                 (uv (aref (modelmesh-tex-coords modelmesh) uv-i))
+                 (normal (vec3 (aref (modelmesh-normals modelmesh) normal-i))))
+            (setf (gethash (hash-attr indices) vertex-ht)
+                  (concatenate '(vector single-float) coord uv normal)))))
+      ;; assign output vertex index
+      ;; and build vertex list
+      (let ((index 0))
+        (with-hash-table-iterator (next-vertex vertex-ht)
+          (loop (mvb-let* ((more? key value (next-vertex)))
+                  (if (null more?) (return))
+                  (setf (gethash key vertex-i-ht) index)
+                  (push value vertex-list)
+                  (incf index)))))
+      (setf vertex-list (reverse vertex-list))
+      ;; build faces list
+      (doarray (f (modelmesh-faces modelmesh))
+        (doarray (vis f)
+          (let ((index (gethash (hash-attr vis) vertex-i-ht)))
+            (push index face-list))))
+      (setf face-list (reverse face-list))
+      ;; flaten vertex list and face list then return
+      (let ((vertex-array (make-array (* 8 (length vertex-list))
+                                      :element-type 'single-float))
+            (face-array (make-array (length face-list)
+                                    :element-type 'integer)))
+        ;; vertex
+        (let ((index 0))
+          (dolist (v vertex-list)
+            (dotimes (i 8)
+              (setf (aref vertex-array (+ i (* index 8))) (aref v i)))
+            (incf index)))
+        ;; face
+        (let ((index 0))
+          (dolist (f face-list)
+            (setf (aref face-array index) f)
+            (incf index)))
+        (values vertex-array face-array)))))
+
+(mvb-let* ((vertices faces (modelmesh-to-array (wavefront-file-to-modelmesh "test.obj"))))
+  (let ((vertex-num (/ (length vertices) 8)))
+    (dotimes (index vertex-num)
+      (format t "~A:" index)
+      (dotimes (i 8)
+        (format t "    ~A" (aref vertices (+ i (* index 8)))))
+      (format t "~%"))
+    (print faces)))
+;; 0:    -0.5    0.5    0.0    0.0    1.0    0.0    0.0    1.0
+;; 1:    0.5    0.5    0.0    1.0    1.0    0.0    0.0    1.0
+;; 2:    0.5    -0.5    0.0    1.0    0.0    0.0    0.0    1.0
+;; 3:    -0.5    0.5    0.0    0.0    1.0    0.0    0.0    -1.0
+;; 4:    0.5    -0.5    0.0    1.0    0.0    0.0    0.0    -1.0
+;; 5:    -0.5    -0.5    0.0    0.0    0.0    0.0    0.0    -1.0
+;; #(0 1 2 3 4 5)

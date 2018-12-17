@@ -1,6 +1,3 @@
-(require :cffi)
-(require :png)
-
 (cffi:use-foreign-library "libGLEW.so")
 (cffi:use-foreign-library "libGLU.so")
 (cffi:use-foreign-library "libGL.so")
