@@ -154,6 +154,8 @@
 (defparameter +GL_UNSIGNED_INT+ #x1405)
 (defparameter +GL_FLOAT+ #x1406)
 (defparameter +GL_NEAREST+ #x2600)
+(defparameter +GL_LINEAR+ #x2601)
+(defparameter +GL_LINEAR_MIPMAP_LINEAR+ #x2703)
 (defparameter +GL_TEXTURE_MAG_FILTER+ #x2800)
 (defparameter +GL_TEXTURE_MIN_FILTER+ #x2801)
 (defparameter +GL_TRUE+ 1)
@@ -448,3 +450,7 @@
 ;; void glTexParameteri(GLenum target, GLenum pname, GLint param);
 (cffi:defcfun (c-gl-tex-parameter-i "glTexParameteri") :void
   (target :gl-enum) (pname :gl-enum) (param :int))
+
+;; void glGenerateMipmap(GLenum target);
+(cffi:defcfun (c-gl-generate-mipmap "glGenerateMipmap") :void
+  (target :gl-enum))
