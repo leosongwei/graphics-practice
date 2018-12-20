@@ -27,4 +27,8 @@ Load files: `sbcl --load triangle.lisp`
 * `texture.lisp`
   - load texture
   - <img src="img/texture.png" width=200/>
+* `perspective.lisp`
+  - load obj model
+  - projection
+  - <img src="img/perspective.png" width=200/>
 
