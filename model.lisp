@@ -204,59 +204,38 @@
 ;; (#(i i i) ...)
 (defun modelmesh-to-array (modelmesh)
   (flet ((hash-attr (v)
-           (let ((vi (aref v 0)) (ui (aref v 1)) (ni (aref v 2)))
-             (+ (ash vi 64) (ash ui 32) ni))))
-    (let ((vertex-ht (make-hash-table))
-          (vertex-i-ht (make-hash-table))
-          (vertex-list nil) ;; (#(v v v uv uv n n n) ...) 8
-          (face-list nil))  ;; (#(i i i) ...)
-      ;; compact vertices
-      (doarray (f (modelmesh-faces modelmesh))
-        (doarray (indices f)
-          (let* (;; index
-                 (coord-i (aref indices 0))
-                 (uv-i (aref indices 1))
-                 (normal-i (aref indices 2))
-                 ;; vectors
-                 (coord (vec3 (aref (modelmesh-vertices modelmesh) coord-i)))
-                 (uv (aref (modelmesh-tex-coords modelmesh) uv-i))
-                 (normal (vec3 (aref (modelmesh-normals modelmesh) normal-i))))
-            (setf (gethash (hash-attr indices) vertex-ht)
-                  (concatenate '(vector single-float) coord uv normal)))))
-      ;; assign output vertex index
-      ;; and build vertex list
-      (let ((index 0))
-        (with-hash-table-iterator (next-vertex vertex-ht)
-          (loop (mvb-let* ((more? key value (next-vertex)))
-                  (if (null more?) (return))
-                  (setf (gethash key vertex-i-ht) index)
-                  (push value vertex-list)
-                  (incf index)))))
-      (setf vertex-list (reverse vertex-list))
-      ;; build faces list
-      (doarray (f (modelmesh-faces modelmesh))
-        (doarray (vis f)
-          (let ((index (gethash (hash-attr vis) vertex-i-ht)))
-            (push index face-list))))
-      (setf face-list (reverse face-list))
-      ;; flaten vertex list and face list then return
-      (let ((vertex-array (make-array (* 8 (length vertex-list))
-                                      :element-type 'single-float))
-            (face-array (make-array (length face-list)
-                                    :element-type 'integer)))
-        ;; vertex
-        (let ((index 0))
-          (dolist (v vertex-list)
-            (dotimes (i 8)
-              (setf (aref vertex-array (+ i (* index 8))) (aref v i)))
-            (incf index)))
-        ;; face
-        (let ((index 0))
-          (dolist (f face-list)
-            (setf (aref face-array index) f)
-            (incf index)))
-        (values vertex-array face-array)))))
-
+           (+ (ash (aref v 0) 64)
+              (ash (aref v 1) 32)
+              (aref v 2))))
+    (let* ((vertex-array (make-array 0 :adjustable t :fill-pointer t))
+           (vertex-index-ht (make-hash-table))
+           (index-array (make-array (* 3 (length (modelmesh-faces modelmesh)))))
+           (index 0))
+      (doarray (face (modelmesh-faces modelmesh) face-i)
+        (doarray (vertex face vertex-f-i)
+          (let* ((vi (aref vertex 0))
+                 (ti (aref vertex 1))
+                 (ni (aref vertex 2))
+                 (vertex-sig (hash-attr vertex)))
+            (mvb-let* ((val foundp (gethash vertex-sig vertex-index-ht)))
+              val
+              (if (not foundp)
+                  (let ((v (concatenate
+                            '(vector single-float)
+                            (vec3 (aref (modelmesh-vertices modelmesh) vi))
+                            (aref (modelmesh-tex-coords modelmesh) ti)
+                            (vec3 (aref (modelmesh-normals modelmesh) ni)))))
+                    (vector-push-extend v vertex-array)
+                    (setf (gethash vertex-sig vertex-index-ht) index)
+                    (incf index))))
+            (let ((vertex-i (gethash vertex-sig vertex-index-ht)))
+              (setf (aref index-array (+ vertex-f-i (* 3 face-i))) vertex-i)))))
+      (let ((vertex-array-flat (make-array (* 8 (length vertex-array)))))
+        (dotimes (vi (length vertex-array))
+          (dotimes (i 8)
+            (setf (aref vertex-array-flat (+ i (* 8 vi)))
+                  (aref (aref vertex-array vi) i))))
+        (values vertex-array-flat index-array)))))
 ;; (mvb-let* ((vertices faces (modelmesh-to-array (wavefront-file-to-modelmesh "test.obj"))))
 ;;   (let ((vertex-num (/ (length vertices) 8)))
 ;;     (dotimes (index vertex-num)
@@ -284,4 +263,6 @@
 ;; 1:    0.5    0.5    0.0    1.0    1.0    0.0    0.0    1.0
 ;; 2:    0.5    -0.5    0.0    1.0    0.0    0.0    0.0    1.0
 ;; 3:    -0.5    -0.5    0.0    0.0    0.0    0.0    0.0    1.0
-;; #(0 1 2 0 2 3) 
+;; #(0 1 2 0 2 3)
+
+

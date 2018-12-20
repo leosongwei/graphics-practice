@@ -178,6 +178,7 @@
 (defparameter +GL_RGBA+ #x1908)
 (defparameter +GL_TEXTURE0+ #x84C0)
 
+
 ;; types
 (cffi:defctype :gl-enum :uint)
 (cffi:defctype :gl-bitfield :uint)

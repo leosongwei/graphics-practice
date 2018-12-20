@@ -16,13 +16,15 @@
     (c-sdl-gl-createcontext *window*))
 
   (c-glewinit)
-  ;;(c-gl-enable +gl_depth_test+)
-  ;;(c-gl-depthfunc +gl_less+)
+
+  (c-gl-enable +gl_depth_test+)
+  (c-gl-depthfunc +gl_less+)
 
   (progn
     (c-gl-clear-color 0.2 0.2 0.2 0.0)
     (c-gl-clear (logior +GL_COLOR_BUFFER_BIT+ +GL_DEPTH_BUFFER_BIT+)))
   (c-sdl-gl-swapwindow *window*))
+
 
 (progn
   (defparameter *vertex-shader-string*
@@ -36,7 +38,7 @@ uniform mat4 projection;
 uniform mat4 transform;
 
 void main(){
-  gl_Position = transform * vec4(v_pos, 1.0f);
+  gl_Position = projection * transform * vec4(v_pos, 1.0f);
   tex_coord = v_uv;
 }
 ")
@@ -104,7 +106,7 @@ void main(){
                                 (cffi:make-pointer (* 3 (c-sizeof :float))))
     (c-gl-enable-vertex-attrib-array 1)
     ;; normal, layout location=2
-    (c-gl-vertex-attrib-pointer 2 3 +GL_FLOAT+ +GL_FALSE+
+    (c-gl-vertex-attrib-pointer 2 3 +GL_FLOAT+ +GL_TRUE+
                                 (* 8 (c-sizeof :float))
                                 (cffi:make-pointer (* 5 (c-sizeof :float))))
     (c-gl-enable-vertex-attrib-array 2)
@@ -128,6 +130,7 @@ void main(){
 
 ;;;; draw
 (progn
+  (c-gl-clear (logior +GL_COLOR_BUFFER_BIT+ +GL_DEPTH_BUFFER_BIT+))
   (c-gl-bind-vertex-array *vao*)
   (c-gl-use-program *shader-program-id*)
   (c-gl-uniform-1i (gl-get-uniform-location *shader-program-id* "tex") 0)
@@ -135,19 +138,25 @@ void main(){
   (c-gl-bind-texture +GL_TEXTURE_2D+ *texture-id*)
 
   ;; transform
-  (let* ((project-mat (frustum-mat 5 (/ 4 3) 0.1 100))
-         (trans-mat (3d-trans-mat 0.05 -0.35 -50.0))
-         (scale-mat (3d-scale 1.0))
+  (let* ((project-mat (frustum-mat 10 (/ 4 3) 0.1 15))
+         (trans-mat (3d-trans-mat 0.05 -0.35 -10.0))
+         (scale-mat (3d-scale 5.0))
          (trans-world (mul-44-44 trans-mat scale-mat))
          (project-mat-buffer (alloc-mat44f))
          (trans-world-buffer (alloc-mat44f)))
     (update-mat44f-buffer project-mat project-mat-buffer)
     (update-mat44f-buffer trans-world trans-world-buffer)
     (c-gl-uniform-matrix-4fv (gl-get-uniform-location *shader-program-id* "projection")
-                             1 +GL_FALSE+ project-mat-buffer)
+                             1 +GL_TRUE+ project-mat-buffer)
     (c-gl-uniform-matrix-4fv (gl-get-uniform-location *shader-program-id* "transform")
-                             1 +GL_FALSE+ trans-world-buffer))
-
-  (c-gl-draw-elements +GL_TRIANGLES+ *index-length* +GL_UNSIGNED_INT+ null-pointer))
+                             1 +GL_TRUE+ trans-world-buffer)
+    (c-gl-draw-elements +GL_TRIANGLES+ *index-length* +GL_UNSIGNED_INT+ null-pointer)
+    (let* ((trans-mat (3d-trans-mat 0.25 0.0 -13.0))
+           (rot-mat (3d-rotate-y 90))
+           (trans-world (mul-44-44 trans-mat (mul-44-44 rot-mat scale-mat))))
+      (update-mat44f-buffer trans-world trans-world-buffer)
+      (c-gl-uniform-matrix-4fv (gl-get-uniform-location *shader-program-id* "transform")
+                               1 +GL_TRUE+ trans-world-buffer)
+      (c-gl-draw-elements +GL_TRIANGLES+ *index-length* +GL_UNSIGNED_INT+ null-pointer))))
 
 (c-sdl-gl-swapwindow *window*)
