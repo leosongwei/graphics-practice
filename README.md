@@ -31,4 +31,6 @@ Load files: `sbcl --load triangle.lisp`
   - load obj model
   - projection
   - <img src="img/perspective.png" width=200/>
-
+* `light.lisp`
+  - ambient, diffuse, specular
+  - <img src="img/light.png" width=200/>

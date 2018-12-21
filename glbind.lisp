@@ -149,6 +149,7 @@
   (window :pointer))
 
 ;; ---------OpenGL------------
+(defparameter +GL_CULL_FACE+ #x0B44)
 (defparameter +GL_TEXTURE_2D+ #x0DE1)
 (defparameter +GL_UNSIGNED_BYTE+ #x1401)
 (defparameter +GL_UNSIGNED_INT+ #x1405)
