@@ -34,3 +34,12 @@ Load files: `sbcl --load triangle.lisp`
 * `light.lisp`
   - ambient, diffuse, specular
   - <img src="img/light.png" width=200/>
+
+Acknowledgement
+---------------
+
+* [stone normal map](https://opengameart.org/content/ground-outdoors-dirt-and-stones-seamless-texture-with-normalmap-dirtandstonesnjpg)
+  - by Keith333(under CC-BY 3.0)
+* [wood](https://www.publicdomainpictures.net/en/view-image.php?image=209094&picture=natural-wood-grain-background)
+  - by Alex Borland(in public domain)
+

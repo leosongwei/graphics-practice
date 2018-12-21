@@ -70,11 +70,11 @@ void main(){
   vec3 view_pos = -vec3(trans_view[3]);
 
   // ambient
-  float ambient_coef = 0.2;
+  float ambient_coef = 0.3;
   vec3 ambient_light = ambient_coef * light_color;
 
   // diffuse
-  float diffuse_coef = 0.7 * max(dot(normal, light_dir), 0.0);
+  float diffuse_coef = 0.8 * max(dot(normal, light_dir), 0.0);
   vec3 diffuse_light = diffuse_coef * light_color;
 
   // specular
