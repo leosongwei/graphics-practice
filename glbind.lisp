@@ -177,13 +177,23 @@
 (defparameter +GL_RGB+ #x1907)
 (defparameter +GL_RGBA+ #x1908)
 (defparameter +GL_TEXTURE0+ #x84C0)
-
+(defparameter +GL_CURRENT_PROGRAM+ #x8B8D)
 
 ;; types
 (cffi:defctype :gl-enum :uint)
 (cffi:defctype :gl-bitfield :uint)
 (cffi:defctype :gl-sizei :int)
 (cffi:defctype :gl-boolean :uchar)
+
+;; void glGetIntegerv(GLenum pname, GLint * data);
+(cffi:defcfun (c-gl-get-intergerv "glGetIntegerv") :void
+  (pname :gl-enum) (data :pointer))
+
+(defun gl-get-integer-v (pname)
+  (cffi:with-foreign-object (data :int)
+    (c-gl-get-intergerv pname data)
+    (cffi:mem-ref data :int)))
+;; (list *shader-program-id* (gl-get-integer-v +gl_current_program+))
 
 ;; void glFlush(void);
 (cffi:defcfun (c-gl-flush "glFlush") :void)
@@ -410,6 +420,15 @@
 ;;        const GLfloat *value);
 (cffi:defcfun (c-gl-uniform-matrix-4fv "glUniformMatrix4fv") :void
   (location :int) (count :gl-sizei) (transpose :gl-boolean) (value-pointer :pointer))
+
+(defun gl-uniform-mat4fv (uniform-name mat44f &optional (transpose t))
+  (let* ((shader-id (gl-get-integer-v +GL_CURRENT_PROGRAM+))
+         (location (gl-get-uniform-location shader-id uniform-name))
+         (buffer (alloc-mat44f)))
+    (update-mat44f-buffer mat44f buffer)
+    (c-gl-uniform-matrix-4fv location 1 (if transpose +GL_TRUE+ +GL_FALSE+)
+                             buffer)
+    (cffi:foreign-free buffer)))
 
 ;; void glGenTextures(GLsizei n, GLuint * textures);
 (cffi:defcfun (c-gl-gen-textures "glGenTextures") :void
