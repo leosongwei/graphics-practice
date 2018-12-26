@@ -34,6 +34,22 @@
     new))
 ;; (flat-mat #2a((1.0 2.0) (3.0 4.0)))
 
+(defun mat-row (mat row)
+  (let* ((col (array-dimension mat 1))
+         (vec (make-array col :element-type 'single-float)))
+    (dotimes (c col)
+      (setf (aref vec c) (aref mat row c)))
+    vec))
+;; (mat-row #2a((1.0 2.0 3.0) (4.0 5.0 6.0)) 1)
+
+(defun mat-col (mat col)
+  (let* ((row (array-dimension mat 0))
+         (vec (make-array row :element-type 'single-float)))
+    (dotimes (r row)
+      (setf (aref vec r) (aref mat r col)))
+    vec))
+;; (mat-col #2a((1.0 2.0 3.0) (4.0 5.0 6.0)) 0)
+
 ;; ---------------------------------
 
 (defun mat-add (mat-a mat-b)
