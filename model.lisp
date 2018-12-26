@@ -105,13 +105,15 @@
 ;;(make-array-list 4 '(1.0 2.0 3.0 4.0))
 
 (defstruct modelmesh
-  vertices  ;; #(float-vec4 ...)
-  tex-coords ;; #(float-vec4 ...)
-  normals ;; #(float-vec4 ...)
-  faces) ;; #(face),
-;; face:#(int-vec3 int-vec3 int-vec3)
-;;        coords   uvs      normals
-;; vertex attribute index, 0-indexed, not like wavefront!!
+  vertices  ;;; #(float-vec4 ...)
+  tex-coords ;;; #(float-vec4 ...)
+  normals ;;; #(float-vec4 ...)
+  faces ;;; #(face),
+  ;; face:#(int-vec3 int-vec3 int-vec3)
+  ;;        coords   uvs      normals
+  ;; vertex attribute index, 0-indexed, not like wavefront!!
+  tb ;; tangent / bitangent, (2 3) matrix, one to one with each vertex
+  )
 
 (defun make-model-from-wave-front (vertices tex-coords normals faces)
   (make-modelmesh :vertices
@@ -252,7 +254,7 @@
       ;;                               :initial-contents `((,(aref uv2 1)     ,(- (aref uv1 1)))
       ;;                                                   (,(- (aref uv2 0)) ,(aref uv1 0)))))
       ;;              (e (make-mat e1 e2))
-      ;;              (tb-array (mul-x-mat a (multiply-mat uvp e)))
+      ;;              (tb-array (mat-mul-x a (mat-mul uvp e)))
       ;;              (tb (flat-mat tb-array))
       ;;              (vsigs (mapvec #'hash-attr face))
       ;;              (vertices (mapvec (lambda (vsig)

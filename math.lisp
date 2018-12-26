@@ -22,7 +22,7 @@
         (dotimes (c len)
           (setf (aref a r c) (aref v c)))))
     a))
-;; (multiply-mat #2a((1 2) (3 4)) (make-mat #(1 2 3) #(4 5 6)))
+;; (mat-mul #2a((1 2) (3 4)) (make-mat #(1 2 3) #(4 5 6)))
 
 (defun flat-mat (mat)
   (let* ((row (array-dimension mat 0))
@@ -36,13 +36,24 @@
 
 ;; ---------------------------------
 
-(defun multiply-mat (a b)
+(defun mat-add (mat-a mat-b)
+  (let* ((a mat-a)
+         (b mat-b)
+         (row (array-dimension a 0))
+         (col (array-dimension a 1))
+         (new (make-array `(,row ,col) :element-type 'single-float)))
+    (dotimes (r row)
+      (dotimes (c col)
+        (setf (aref new r c) (+ (aref a r c) (aref b r c)))))
+    new))
+
+(defun mat-mul (a b)
   (let* ((row (array-dimension a 0))
          (col (array-dimension b 1))
          (col-row (if (= (array-dimension a 1) (array-dimension b 0))
                       (array-dimension a 1)
                       (progn
-                        (error "multiply-mat: arrays not match")
+                        (error "mat-mul: arrays not match")
                         -233)))
          (m (make-array `(,row ,col) :element-type 'single-float)))
     (dotimes (r row)
@@ -54,7 +65,7 @@
                 sum))))
     m))
 
-(defun mul-x-mat (x mat)
+(defun mat-mul-x (x mat)
   (let ((new (make-array `(,(array-dimension mat 0)
                             ,(array-dimension mat 1))
                          :element-type 'single-float)))
@@ -134,7 +145,7 @@
   (mul-33-v3 m33 v3)
   (mul-44-44 m44 m44)
   (mul-44-v4 m44 v4)
-  (multiply-mat m44 m44))
+  (mat-mul m44 m44))
 |#
 
 
