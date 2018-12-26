@@ -225,7 +225,7 @@
              (uvp (make-array '(2 2)
                               :initial-contents `((,(aref uv2 1)     ,(- (aref uv1 1)))
                                                   (,(- (aref uv2 0)) ,(aref uv1 0)))))
-             (e (make-mat e1 e2))
+             (e (make-mat-from-vecs e1 e2))
              (tb-mat (mat-mul-x a (mat-mul uvp e))))
              ;; (v-tbs (mapvec (lambda (vi) (mat-add tb (aref tb vi)) vi-a))))
         (mapvec (lambda (vi)
@@ -240,6 +240,10 @@
           (setf (aref tb i) (mat-mul-x (/ 1.0 (aref tb-count i)) (aref tb i)))))
     (setf (modelmesh-tb modelmesh) tb)
     modelmesh))
+;; (let* ((m (wavefront-file-to-modelmesh "test1.obj")))
+;;   (calculate-tb-f m)
+;;   (modelmesh-tb m))
+
 
 ;; out format:
 ;; vertices:

@@ -14,7 +14,7 @@
       (setf (aref a i) (aref array i)))
     a))
 
-(defun make-mat (&rest vecs)
+(defun make-mat-from-vecs (&rest vecs)
   (let ((a (make-array `(,(length vecs) ,(length (nth 0 vecs))))))
     (dotimes (r (length vecs))
       (let* ((v (nth r vecs))
