@@ -273,13 +273,14 @@
                             (vec3 (aref (modelmesh-vertices modelmesh) vi))
                             (aref (modelmesh-tex-coords modelmesh) ti)
                             (vec3 (aref (modelmesh-normals modelmesh) ni)))))
+                    (if with-tb
+                        (setf v (concatenate '(vector single-float)
+                                             v (flat-mat (aref (modelmesh-tb modelmesh) vi)))))
                     (vector-push-extend v vertex-array)
                     (setf (gethash vertex-sig vertex-index-ht) index)
                     (incf index))))
             (let ((vertex-i (gethash vertex-sig vertex-index-ht)))
               (setf (aref index-array (+ vertex-f-i (* 3 face-i))) vertex-i)))))
-      ;; calculate Tangent and Bitangent
-
       (let* ((vertex-length (if with-tb (+ 8 6) 8))
              (vertex-array-flat (make-array (* vertex-length (length vertex-array)))))
         (dotimes (vi (length vertex-array))
@@ -315,5 +316,12 @@
 ;; 2:    0.5    -0.5    0.0    1.0    0.0    0.0    0.0    1.0
 ;; 3:    -0.5    -0.5    0.0    0.0    0.0    0.0    0.0    1.0
 ;; #(0 1 2 0 2 3)
-
-
+;; (let ((modelmesh (wavefront-file-to-modelmesh "test1.obj")))
+;;   (calculate-tb-f modelmesh)
+;;   (mvb-let* ((vertices faces (modelmesh-to-array modelmesh t)))
+;;     (let ((vertex-num (/ (length vertices) (+ 8 6))))
+;;       (dotimes (index 10)
+;;         (format t "~A:" index)
+;;         (dotimes (i (+ 8 6))
+;;           (format t "    ~A" (aref vertices (+ i (* index (+ 6 8))))))
+;;         (format t "~%")))))
