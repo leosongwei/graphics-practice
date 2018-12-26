@@ -14,6 +14,26 @@
       (setf (aref a i) (aref array i)))
     a))
 
+(defun make-mat (&rest vecs)
+  (let ((a (make-array `(,(length vecs) ,(length (nth 0 vecs))))))
+    (dotimes (r (length vecs))
+      (let* ((v (nth r vecs))
+             (len (length v)))
+        (dotimes (c len)
+          (setf (aref a r c) (aref v c)))))
+    a))
+;; (multiply-mat #2a((1 2) (3 4)) (make-mat #(1 2 3) #(4 5 6)))
+
+(defun flat-mat (mat)
+  (let* ((row (array-dimension mat 0))
+         (col (array-dimension mat 1))
+         (new (make-array (* row col) :element-type 'single-float)))
+    (dotimes (r row)
+      (dotimes (c col)
+        (setf (aref new (+ c (* r col))) (aref mat r c))))
+    new))
+;; (flat-mat #2a((1.0 2.0) (3.0 4.0)))
+
 ;; ---------------------------------
 
 (defun multiply-mat (a b)
@@ -33,6 +53,16 @@
                   (incf sum (* (aref a r j) (aref b j c))))
                 sum))))
     m))
+
+(defun mul-x-mat (x mat)
+  (let ((new (make-array `(,(array-dimension mat 0)
+                            ,(array-dimension mat 1))
+                         :element-type 'single-float)))
+    (dotimes (r (array-dimension mat 0))
+      (dotimes (c (array-dimension mat 1))
+        (setf (aref new r c) (* x (aref mat r c)))))
+    new))
+;; (mul-x-mat 2.0 #2a((1 2 3) (3 2 1)))
 
 (defun mul-33-33 (a b)
   (let ((m (make-array '(3 3) :element-type 'single-float)))
