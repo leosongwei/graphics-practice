@@ -112,7 +112,7 @@
   ;; face:#(int-vec3 int-vec3 int-vec3)
   ;;        coords   uvs      normals
   ;; vertex attribute index, 0-indexed, not like wavefront!!
-  tb ;; tangent / bitangent, (2 3) matrix, one to one with each vertex
+  tb ;; tangent / bitangent, #2a((t t t) (b b b)), one to one with each vertex
   )
 
 (defun make-model-from-wave-front (vertices tex-coords normals faces)
@@ -198,6 +198,48 @@
 ;;              (aref face 2) world-coords ndc-coords normals tex-coords)))
 ;;     (build-triangle v1 v2 v3)))
 
+(defun calculate-tb-f (modelmesh)
+  (let* ((vertices (modelmesh-vertices modelmesh))
+         (tex-coords (modelmesh-tex-coords modelmesh))
+         (faces (modelmesh-faces modelmesh))
+         (tb (make-array (length vertices)))
+         (tb-count (make-array (length vertices) :element-type 'single-float
+                               :initial-element 0.0)))
+    ;; initialize tb
+    (dotimes (i (length vertices))
+      (setf (aref tb i) (make-array '(2 3) :element-type 'single-float :initial-element 0.0)))
+    (doarray (face faces face-i)
+      (let* ((vi-a (mapvec (lambda (v) (aref v 0)) face)) ;; vertex index vec of the face
+             (ti-a (mapvec (lambda (v) (aref v 1)) face)) ;; uv index vec of the face
+             (coords (mapvec (lambda (vi) (aref vertices vi)) vi-a)) ;; vertex coord of the face
+             (uvs (mapvec (lambda (ti) (aref tex-coords ti)) ti-a)) ;; tex coords of the face
+             (e1 (vec3- (aref coords 1) (aref coords 0)))
+             (e2 (vec3- (aref coords 2) (aref coords 1)))
+             (uv1 (vec2- (aref uvs 1) (aref uvs 0)))
+             (uv2 (vec2- (aref uvs 2) (aref uvs 1)))
+             (a (/ 1.0 (let ((d (- (* (aref uv1 0)     ;; u1 ;;;; u1 * v2 - u2 * v1
+                                      (aref uv2 1))    ;; v2
+                                   (* (aref uv2 0)     ;; u2
+                                      (aref uv1 1))))) ;; v1
+                         (if (= d 0.0) 0.01 d))))
+             (uvp (make-array '(2 2)
+                              :initial-contents `((,(aref uv2 1)     ,(- (aref uv1 1)))
+                                                  (,(- (aref uv2 0)) ,(aref uv1 0)))))
+             (e (make-mat e1 e2))
+             (tb-mat (mat-mul-x a (mat-mul uvp e))))
+             ;; (v-tbs (mapvec (lambda (vi) (mat-add tb (aref tb vi)) vi-a))))
+        (mapvec (lambda (vi)
+                  ;; sum up tb
+                  (setf (aref tb vi) (mat-add (aref tb vi) tb-mat))
+                  ;; update count
+                  (incf (aref tb-count vi) 1.0))
+                vi-a)))
+    ;; avg the tb
+    (dotimes (i (length vertices))
+      (if (not (= 0.0 (aref tb-count i)))
+          (setf (aref tb i) (mat-mul-x (/ 1.0 (aref tb-count i)) (aref tb i)))))
+    (setf (modelmesh-tb modelmesh) tb)
+    modelmesh))
 
 ;; out format:
 ;; vertices:
@@ -233,39 +275,7 @@
             (let ((vertex-i (gethash vertex-sig vertex-index-ht)))
               (setf (aref index-array (+ vertex-f-i (* 3 face-i))) vertex-i)))))
       ;; calculate Tangent and Bitangent
-      ;; (if with-tb
-      ;;     (doarray (face (modelmesh-faces modelmesh) face-i)
-      ;;       (let* ((vi-a (mapvec (lambda (v) (aref v 0)) face))
-      ;;              (ti-a (mapvec (lambda (v) (aref v 1)) face))
-      ;;              (coords (mapvec (lambda (vi) (aref (modelmesh-vertices modelmesh) vi))
-      ;;                              vi-a))
-      ;;              (uvs (mapvec (lambda (ti) (aref (modelmesh-tex-coords modelmesh) ti))
-      ;;                           ti-a))
-      ;;              (e1 (vec3- (aref coords 1) (aref coords 0)))
-      ;;              (e2 (vec3- (aref coords 2) (aref coords 1)))
-      ;;              (uv1 (vec2- (aref uvs 1) (aref uvs 0)))
-      ;;              (uv2 (vec2- (aref uvs 2) (aref uvs 1)))
-      ;;              (a (/ 1.0 (let ((d (- (* (aref uv1 0)
-      ;;                                       (aref uv2 1))
-      ;;                                    (* (aref uv2 1))
-      ;;                                    (aref uv1 0))))
-      ;;                          (if (= d 0.0) 0.01 d))))
-      ;;              (uvp (make-array '(2 2)
-      ;;                               :initial-contents `((,(aref uv2 1)     ,(- (aref uv1 1)))
-      ;;                                                   (,(- (aref uv2 0)) ,(aref uv1 0)))))
-      ;;              (e (make-mat e1 e2))
-      ;;              (tb-array (mat-mul-x a (mat-mul uvp e)))
-      ;;              (tb (flat-mat tb-array))
-      ;;              (vsigs (mapvec #'hash-attr face))
-      ;;              (vertices (mapvec (lambda (vsig)
-      ;;                                  (let ((v (aref vertex-array
-      ;;                                                 (gethash vsig vertex-index-ht))))
-      ;;                                    (concatenate '(vector single-float)
-      ;;                                                 v tb)))
-      ;;                                vsigs))
-      ;;              (indicies (mapvec (lambda (vsig) (gethash vsig vertex-index-ht)) vsigs)))
-      ;;        todo)))
-      ;; flaten vertex array and return
+
       (let* ((vertex-length (if with-tb (+ 8 6) 8))
              (vertex-array-flat (make-array (* vertex-length (length vertex-array)))))
         (dotimes (vi (length vertex-array))
