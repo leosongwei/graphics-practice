@@ -226,11 +226,12 @@
                               :initial-contents `((,(aref uv2 1)     ,(- (aref uv1 1)))
                                                   (,(- (aref uv2 0)) ,(aref uv1 0)))))
              (e (make-mat-from-vecs e1 e2))
-             (tb-mat (mat-mul-x a (mat-mul uvp e))))
-             ;; (v-tbs (mapvec (lambda (vi) (mat-add tb (aref tb vi)) vi-a))))
+             (tb-mat (mat-mul-x a (mat-mul uvp e)))
+             (tb-mat-normalized (make-mat-from-vecs (vec3-normalize (mat-row tb-mat 0))
+                                                    (vec3-normalize (mat-row tb-mat 1)))))
         (mapvec (lambda (vi)
                   ;; sum up tb
-                  (setf (aref tb vi) (mat-add (aref tb vi) tb-mat))
+                  (setf (aref tb vi) (mat-add (aref tb vi) tb-mat-normalized))
                   ;; update count
                   (incf (aref tb-count vi) 1.0))
                 vi-a)))
