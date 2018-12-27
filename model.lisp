@@ -317,7 +317,7 @@
 ;; 2:    0.5    -0.5    0.0    1.0    0.0    0.0    0.0    1.0
 ;; 3:    -0.5    -0.5    0.0    0.0    0.0    0.0    0.0    1.0
 ;; #(0 1 2 0 2 3)
-;; (let ((modelmesh (wavefront-file-to-modelmesh "test1.obj")))
+;; (let ((modelmesh (wavefront-file-to-modelmesh "bunny.obj")))
 ;;   (calculate-tb-f modelmesh)
 ;;   (mvb-let* ((vertices faces (modelmesh-to-array modelmesh t)))
 ;;     (let ((vertex-num (/ (length vertices) (+ 8 6))))
