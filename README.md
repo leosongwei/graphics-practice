@@ -34,6 +34,9 @@ Load files: `sbcl --load triangle.lisp`
 * `light.lisp`
   - ambient, diffuse, specular
   - <img src="img/light.png" width=200/>
+* `normalmap.lisp`
+  - normal map
+  - <img src="img/normalmap.png" width=200/>
 
 Acknowledgement
 ---------------
