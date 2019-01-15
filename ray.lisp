@@ -47,3 +47,28 @@
 ;;     (0.5 -0.25 0.0 0.25)
 ;;     (0.0 0.0 1.0 2.0)
 ;;     (0.0 0.0 0.0 1.0))
+
+(defun intersection-with-ray-p (mat origin direction)
+  (let* ((orig-t (mul-44-v4 mat (vec3->vec4 origin 1.0)))
+         (dir-t (mul-44-v4 mat (vec3->vec4 direction 0.0)))
+         (ta (- (/ (aref orig-t 2) (aref dir-t 2))))
+         (b1 (+ (aref orig-t 0) (* ta (aref dir-t 0))))
+         (b2 (+ (aref orig-t 1) (* ta (aref dir-t 1)))))
+    (values (and (<= 0.0 b1 1.0)
+                 (<= 0.0 b2 1.0)
+                 (< (+ b1 b2) 1.0))
+            ta)))
+;; (intersection-with-ray-p
+;;  (calculate-project-mat (make-vec3 0.0 1.0 -2.0)
+;;                         (make-vec3 -1.0 -1.0 -2.0)
+;;                         (make-vec3 1.0 -1.0 -2.0))
+;;  (make-vec3 0.48 0.0 0.0)
+;;  (make-vec3 0.0 0.0 -1.0))
+;; => t
+;; (intersection-with-ray-p
+;;  (calculate-project-mat (make-vec3 0.0 1.0 -2.0)
+;;                         (make-vec3 -1.0 -1.0 -2.0)
+;;                         (make-vec3 1.0 -1.0 -2.0))
+;;  (make-vec3 0.52 0.0 0.0)
+;;  (make-vec3 0.0 0.0 -1.0))
+;; => nil
