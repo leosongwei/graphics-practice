@@ -330,6 +330,13 @@ V4 : transpose(matrix([1.0, 2.0, 3.0, 4.0]));
               :initial-contents `(,(aref vec4 0)
                                    ,(aref vec4 1)
                                    ,(aref vec4 2))))
+(defun vec3->vec4 (vec3 w)
+  (make-array 4 :element-type 'single-float
+              :initial-contents `(,(aref vec3 0)
+                                   ,(aref vec3 1)
+                                   ,(aref vec3 2)
+                                   ,w)))
+
 ;; ---------------------------------------------------------
 ;; vec3
 
@@ -411,12 +418,14 @@ V4 : transpose(matrix([1.0, 2.0, 3.0, 4.0]));
 (defun vec3-cross (a b)
   (declare (optimize (speed 3))
            (type (simple-array single-float (3)) a b))
-  (+ (- (* (aref a 1) (aref b 2))
-        (* (aref a 2) (aref b 1)))
-     (- (* (aref a 2) (aref b 0))
-        (* (aref a 0) (aref b 2)))
-     (- (* (aref a 0) (aref b 1))
-        (* (aref a 1) (aref b 0)))))
+  (make-array 3 :element-type 'single-float
+              :initial-contents
+              `(,(- (* (aref a 1) (aref b 2))
+                    (* (aref a 2) (aref b 1)))
+                 ,(- (* (aref a 2) (aref b 0))
+                     (* (aref a 0) (aref b 2)))
+                 ,(- (* (aref a 0) (aref b 1))
+                     (* (aref a 1) (aref b 0))))))
 
 (defun vec3-clamp (vec3 &optional (lb 0.0) (ub 1.0))
   (declare (optimize (speed 3))
