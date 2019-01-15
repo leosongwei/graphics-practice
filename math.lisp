@@ -50,6 +50,17 @@
     vec))
 ;; (mat-col #2a((1.0 2.0 3.0) (4.0 5.0 6.0)) 0)
 
+(defun max-is-nth (vec)
+  (declare (optimize (speed 3))
+           (type (simple-array single-float *) vec))
+  (let ((n 0)
+        (max (aref vec 0)))
+    (dotimes (i (length vec))
+      (if (> (aref vec i) max)
+          (progn (setf n i)
+                 (setf max (aref vec i)))))
+    n))
+
 ;; ---------------------------------
 
 (defun mat-add (mat-a mat-b)
@@ -396,6 +407,16 @@ V4 : transpose(matrix([1.0, 2.0, 3.0, 4.0]));
   (+ (* (aref vec1 0) (aref vec2 0))
      (* (aref vec1 1) (aref vec2 1))
      (* (aref vec1 2) (aref vec2 2))))
+
+(defun vec3-cross (a b)
+  (declare (optimize (speed 3))
+           (type (simple-array single-float (3)) a b))
+  (+ (- (* (aref a 1) (aref b 2))
+        (* (aref a 2) (aref b 1)))
+     (- (* (aref a 2) (aref b 0))
+        (* (aref a 0) (aref b 2)))
+     (- (* (aref a 0) (aref b 1))
+        (* (aref a 1) (aref b 0)))))
 
 (defun vec3-clamp (vec3 &optional (lb 0.0) (ub 1.0))
   (declare (optimize (speed 3))
