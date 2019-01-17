@@ -72,3 +72,10 @@
 ;;  (make-vec3 0.52 0.0 0.0)
 ;;  (make-vec3 0.0 0.0 -1.0))
 ;; => nil
+
+(mvb-let* ((v uv n f o (read-wavefront-obj-file "box.obj")))
+  (list :v v
+        :uv uv
+        :n n
+        :f f
+        :o o))

@@ -9,23 +9,25 @@
 
 (defun split-string-with-char (string &optional (char #\Space))
   (let ((list nil)
-        (collect (make-dynamic-string)))
+        (last 0))
     (dotimes (i (length string))
       (let ((c (aref string i)))
-        (if (not (char= c char))
-            (vector-push-extend c collect)
-            (progn (push collect list)
-                   (setf collect (make-dynamic-string))))))
-    (if (> (length collect) 0) (push collect list))
+        (if (char= char c)
+            (progn (push (subseq string last i) list)
+                   (setf last (1+ i))))))
+    (push (subseq string last (length string)) list)
     (reverse list)))
-;;(split-string-with-char "sadfsad/sdfasdfa/asfd" #\/)
+;; (split-string-with-char "sadfsad/sdfasdfa/asfd" #\/)
+;; (split-string-with-char "//" #\/)
 
 (defun read-wavefront-obj-file (file-path)
   (let ((line-list (read-text-into-line-list file-path))
         (vertex-list nil)
         (tex-coord-list nil)
         (normal-list nil)
-        (face-list nil))
+        (face-list nil)
+        (obj-list nil)
+        (obj-count 0))
     (dolist (string line-list)
       (let ((list (split-string-with-char string)))
         (cond ((string= "v" (car list))
@@ -34,7 +36,7 @@
                    ;; (0.123 0.234 0.345 1.0)
                    (push (mapcar #'float
                                  (mapcar
-                                  #'parse-number:parse-number
+                                  #'parse-float
                                   (append (cdr list) '("1.0"))))
                          vertex-list)
                    (error (format nil
@@ -46,7 +48,7 @@
                    ;; #(0.5 1.0)
                    (push (mapcar #'float
                                  (mapcar
-                                  #'parse-number:parse-number
+                                  #'parse-float
                                   (cdr list)))
                          tex-coord-list)
                    (error (format nil
@@ -58,7 +60,7 @@
                    ;; #(0.707 0.000 0.707)
                    (push (mapcar #'float
                                  (mapcar
-                                  #'parse-number:parse-number
+                                  #'parse-float
                                   (append (cdr list) '("0.0"))))
                          normal-list)
                    (error (format nil
@@ -70,18 +72,33 @@
                ;; 1-indexed
                (if (= 3 (length (cdr list)))
                    ;; ((6 4 1) (3 5 3) (7 6 5))
-                   (push (mapcar (lambda (string)
-                                   (mapcar #'parse-integer
-                                           (split-string-with-char string #\/)))
-                                 (cdr list))
-                         face-list)
+                   ;; with object:
+                   ;; ((6 4 1) (3 5 3) (7 6 5) object-id)
+                   (let ((face (mapcar (lambda (string)
+                                         (mapcar (lambda (s)
+                                                   (if (string= s "")
+                                                       0
+                                                       (parse-integer s)))
+                                                 (split-string-with-char string #\/)))
+                                       (cdr list))))
+                     (if (not (= 0 obj-count))
+                         (setf face (append face (list (1- obj-count)))))
+                     (push face face-list))
                    (error (format nil
                                   "read-wavefront-obj-file: unknown face format: ~A"
+                                  string))))
+              ((string= "o" (car list))
+               (if (= 1 (length (cdr list)))
+                   (progn (incf obj-count)
+                          (push (cadr list) obj-list))
+                   (error (format nil
+                                  "read-wavefront-obj-file: unknown object format ~A"
                                   string)))))))
     (values (reverse vertex-list)
             (reverse tex-coord-list)
             (reverse normal-list)
-            (reverse face-list))))
+            (reverse face-list)
+            (reverse obj-list))))
 
 ;; (multiple-value-bind (vertices tex-coords normals faces)
 ;;     (read-wavefront-obj-file #p"test.obj")
@@ -154,7 +171,7 @@
                                                 3 :element-type 'integer
                                                 :initial-contents
                                                 (mapcar (lambda (x) (1- x)) attrib-index)))
-                                             list)))
+                                             (subseq list 0 3))))
                                   faces)))
                     (make-array (length vectors)
                                 :initial-contents vectors))))
