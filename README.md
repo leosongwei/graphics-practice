@@ -45,4 +45,6 @@ Acknowledgement
   - by Keith333(under CC-BY 3.0)
 * [wood](https://www.publicdomainpictures.net/en/view-image.php?image=209094&picture=natural-wood-grain-background)
   - by Alex Borland(in public domain)
-
+* box.obj
+  - box.blend
+  - made by [Blender](https://www.blender.org/)
