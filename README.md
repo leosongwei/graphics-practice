@@ -37,6 +37,9 @@ Load files: `sbcl --load triangle.lisp`
 * `normalmap.lisp`
   - normal map
   - <img src="img/normalmap.png" width=200/>
+* `gold.lisp`
+  - material
+  - <img src="img/gold.png" width=200/>
 
 Acknowledgement
 ---------------
