@@ -111,3 +111,13 @@
 ;;                    '("" "."
 ;;                      "123." "-")))
 ;;   (format t "~A~%" s))
+
+(defun read-file-as-string (pathname)
+  (with-open-file (s pathname)
+    (with-output-to-string (out)
+      (do ((line (read-line s nil nil) (read-line s nil nil)))
+          ((null line) nil)
+        (write-line line out))
+      out)))
+
+
