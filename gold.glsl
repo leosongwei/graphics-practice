@@ -32,7 +32,7 @@ void main(){
   vec3 diffuse = light_color * mat_diffuse * max(dot(normal, light_dir), 0.0);
 
   // ambient
-  vec3 ambient = light_color * mat_ambient;
+  vec3 ambient = 0.3 * light_color * mat_ambient;
 
   color = vec3(specular + diffuse + ambient);
 }
