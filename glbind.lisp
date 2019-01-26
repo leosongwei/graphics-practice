@@ -1,8 +1,9 @@
-(cffi:use-foreign-library "libGLEW.so")
-(cffi:use-foreign-library "libGLU.so")
-(cffi:use-foreign-library "libGL.so")
-(cffi:use-foreign-library "libGLX.so")
-(cffi:use-foreign-library "libSDL2.so")
+#+linux(progn
+         (cffi:use-foreign-library "libGLEW.so")
+         (cffi:use-foreign-library "libGLU.so")
+         (cffi:use-foreign-library "libGL.so")
+         (cffi:use-foreign-library "libGLX.so")
+         (cffi:use-foreign-library "libSDL2.so"))
 
 ;; (aref img y x c)
 (defmacro with-png-buffer (buffer-name file-name width height &body body)
