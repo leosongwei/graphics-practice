@@ -71,7 +71,8 @@ void main(){
   (defparameter *vao* nil)
   (defparameter *vbo* nil)
   (defparameter *ebo* nil)
-  (defparameter *texture-id* nil))
+  (defparameter *texture-id* nil)
+  (defparameter *cube-map-id* nil))
 
 (mvb-let* ((vertices faces (modelmesh-to-array (wavefront-file-to-modelmesh "bunny_high.obj"))))
   ;; (let ((vertex-num (/ (length vertices) 8)))
@@ -125,7 +126,29 @@ void main(){
        image-buffer))
     ;; (c-gl-generate-mipmap +GL_TEXTURE_2D+)
     (c-gl-tex-parameter-i +GL_TEXTURE_2D+ +GL_TEXTURE_MAG_FILTER+ +GL_LINEAR+)
-    (c-gl-tex-parameter-i +GL_TEXTURE_2D+ +GL_TEXTURE_MIN_FILTER+ +GL_LINEAR+)))
+    (c-gl-tex-parameter-i +GL_TEXTURE_2D+ +GL_TEXTURE_MIN_FILTER+ +GL_LINEAR+)
+
+    (defparameter *cube-map-id* (gl-gen-texute-1))
+    (c-gl-bind-texture +GL_TEXTURE_CUBE_MAP+ *cube-map-id*)
+    (let* ((files '("posx" "negx" "posy" "negy" "posz" "negz"))
+           ;; ./img/skybox/posx.png
+           (build-path (lambda (file) (concatenate 'string "./img/skybox/" file ".png")))
+           (path-list (mapcar build-path files))
+           (gl-target-num +GL_TEXTURE_CUBE_MAP_POSITIVE_X+))
+      (dolist (path path-list)
+        (with-png-buffer image-buffer path width height
+          (c-gl-tex-image-2d
+           gl-target-num 0 +GL_RGB+
+           width height 0
+           +GL_RGB+ +GL_UNSIGNED_BYTE+
+           image-buffer))
+        (incf gl-target-num)))
+    (c-gl-tex-parameter-i +GL_TEXTURE_CUBE_MAP+ +GL_TEXTURE_MIN_FILTER+ +GL_LINEAR+)
+    (c-gl-tex-parameter-i +GL_TEXTURE_CUBE_MAP+ +GL_TEXTURE_MAG_FILTER+ +GL_LINEAR+)
+    (c-gl-tex-parameter-i +GL_TEXTURE_CUBE_MAP+ +GL_TEXTURE_WRAP_S+ +GL_CLAMP_TO_EDGE+)
+    (c-gl-tex-parameter-i +GL_TEXTURE_CUBE_MAP+ +GL_TEXTURE_WRAP_T+ +GL_CLAMP_TO_EDGE+)
+    (c-gl-tex-parameter-i +GL_TEXTURE_CUBE_MAP+ +GL_TEXTURE_WRAP_R+ +GL_CLAMP_TO_EDGE+)
+    ))
 
 ;;;; draw
 (progn
@@ -133,8 +156,12 @@ void main(){
   (c-gl-bind-vertex-array *vao*)
   (c-gl-use-program *shader-program-id*)
   (c-gl-uniform-1i (gl-get-uniform-location *shader-program-id* "tex") 0)
+  (c-gl-uniform-1i (gl-get-uniform-location *shader-program-id* "skybox") 1)
+
   (c-gl-active-texture +GL_TEXTURE0+)
   (c-gl-bind-texture +GL_TEXTURE_2D+ *texture-id*)
+  (c-gl-active-texture (1+ +GL_TEXTURE0+))
+  (c-gl-bind-texture +GL_TEXTURE_CUBE_MAP+ *cube-map-id*)
 
   ;; transform
   (loop

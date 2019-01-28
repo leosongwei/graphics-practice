@@ -39,7 +39,8 @@ Load files: `sbcl --load triangle.lisp`
   - <img src="img/normalmap.png" width=200/>
 * `gold.lisp`
   - material
-  - <img src="img/gold.png" width=200/>
+  - cube map
+  - <img src="img/gold.mp4" width=200/>
 
 Acknowledgement
 ---------------
@@ -51,3 +52,5 @@ Acknowledgement
 * box.obj
   - box.blend
   - made by [Blender](https://www.blender.org/)
+* skybox
+  - work of Emil Persson(Creative Commons Attribution 3.0 Unported License)
