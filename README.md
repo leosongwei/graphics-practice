@@ -40,7 +40,7 @@ Load files: `sbcl --load triangle.lisp`
 * `gold.lisp`
   - material
   - cube map
-  - <img src="img/gold.mp4" width=200/>
+  - <img src="img/gold.png" width=200/>
 
 Acknowledgement
 ---------------

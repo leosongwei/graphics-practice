@@ -164,7 +164,6 @@ void main(){
   (c-gl-bind-texture +GL_TEXTURE_CUBE_MAP+ *cube-map-id*)
 
   ;; transform
-  (loop
      (dotimes (i 360)
        (sleep (/ 1 60))
        (c-gl-clear (logior +GL_COLOR_BUFFER_BIT+ +GL_DEPTH_BUFFER_BIT+))
@@ -186,4 +185,4 @@ void main(){
                 (trans-model (mul-44-44 trans (mul-44-44 rot-mat scale-mat))))
            (gl-uniform-mat4fv "trans_model" trans-model)
            (c-gl-draw-elements +GL_TRIANGLES+ *index-length* +GL_UNSIGNED_INT+ null-pointer)))
-       (c-sdl-gl-swapwindow *window*))))
+       (c-sdl-gl-swapwindow *window*)))
