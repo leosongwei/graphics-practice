@@ -3,7 +3,86 @@
          (cffi:use-foreign-library "libGLU.so")
          (cffi:use-foreign-library "libGL.so")
          (cffi:use-foreign-library "libGLX.so")
-         (cffi:use-foreign-library "libSDL2.so"))
+         (cffi:use-foreign-library "libSDL2.so")
+         (cffi:use-foreign-library "libSDL2_image.so"))
+
+(cffi:defcstruct sdl_rect
+  (x :int) (y :int)
+  (w :int) (h :int))
+
+(cffi:defcstruct sdl_surface
+  (flags :uint32)
+  (format :pointer)
+  (w :int) (h :int)
+  (pitch :int)
+  (pixels :pointer)
+  (userdata :pointer)
+  (locked :int)
+  (lock_data :pointer)
+  (clip_rect (:struct sdl_rect))
+  (map :pointer)
+  (refcount :int))
+
+(cffi:defcfun (c-img-load "IMG_Load") :pointer
+  (path :string))
+
+(defparameter +IMG_INIT_JPG+ #x1)
+(defparameter +IMG_INIT_PNG+ #x2)
+(cffi:defcfun (c-img-init "IMG_Init") :int
+  (flags :int))
+(defun sdl-image-init ()
+  (c-img-init +IMG_INIT_PNG+))
+(cffi:defcfun (c-img-quit "IMG_Quit") :void)
+(cffi:defcfun (c-img-get-error "SDL_GetError") :string)
+
+(cffi:defcfun (c-sdl-free-surface "SDL_FreeSurface") :void
+  (surface :pointer))
+(defun sdl-surface-attrib (surface attrib)
+  (cffi:foreign-slot-value surface '(:struct sdl_surface) attrib))
+
+;; (format t "~X~%" #xFF00FF)
+;; (progn
+;;   (sdl-image-init)
+;;   (let ((test (cffi:with-foreign-string (path "img/skybox/negx.png")
+;;                 (c-img-load path))))
+;;     (format t "~A~%" test)
+;;     (format t "~A~%"
+;;             (list
+;;              (cffi:foreign-slot-value test '(:struct sdl_surface) 'w)
+;;              (cffi:foreign-slot-value test '(:struct sdl_surface) 'h)
+;;              (cffi:foreign-slot-value test '(:struct sdl_surface) 'pitch)))
+;;     (let ((ptr (cffi:foreign-slot-value test '(:struct sdl_surface) 'pixels)))
+;;       (format t "img: ~A~%" ptr)
+;;       (dotimes (i 24)
+;;         (format t "~A " (cffi:mem-aref ptr :uint8 i)))
+;;       (format t "~%"))
+;;     )
+;;   (print (c-img-get-error))
+;;   (c-img-quit))
+
+(defun power-of-2-p (num)
+  (and (not (= 0 num))
+       (= 0 (logand (1- num) num))))
+
+(defmacro with-sdl-image ((buffer-name file-name width height) &body body)
+  (let ((surface (gensym))
+        (cpath (gensym)))
+    `(progn
+       (sdl-image-init)
+       (let ((,surface (cffi:with-foreign-string (,cpath ,file-name)
+                       (c-img-load ,cpath))))
+         (if (cffi:null-pointer-p ,surface)
+             (error (format nil "with-sdl-image error: ~A~%" (c-img-get-error))))
+         (let ((,width (sdl-surface-attrib ,surface 'w))
+               (,height (sdl-surface-attrib ,surface 'h)))
+           (if (not (and (power-of-2-p ,width)
+                         (power-of-2-p ,height)))
+               (error (format nil "with-sdl-image error: size is not power of 2 (~A ~A)~%"
+                              ,width ,height)))
+           (let ((,buffer-name (sdl-surface-attrib ,surface 'pixels)))
+             ,@body)
+           (c-img-quit)
+           (c-sdl-free-surface ,surface))))))
 
 ;; (aref img y x c)
 (defmacro with-png-buffer (buffer-name file-name width height &body body)

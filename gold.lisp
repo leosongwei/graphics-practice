@@ -116,9 +116,10 @@ void main(){
     (c-gl-buffer-data +GL_ELEMENT_ARRAY_BUFFER+ (* (length faces) (c-sizeof :float))
                       index-buffer +GL_STATIC_DRAW+)
     ;;;; Texture
+    (format t "loading textures~%")
     (defparameter *texture-id* (gl-gen-texute-1))
     (c-gl-bind-texture +GL_TEXTURE_2D+ *texture-id*)
-    (with-png-buffer image-buffer "./img/wood.png" width height
+    (with-sdl-image (image-buffer "./img/wood.png" width height)
       (c-gl-tex-image-2d
        +GL_TEXTURE_2D+ 0 +GL_RGB+
        width height 0
@@ -136,7 +137,8 @@ void main(){
            (path-list (mapcar build-path files))
            (gl-target-num +GL_TEXTURE_CUBE_MAP_POSITIVE_X+))
       (dolist (path path-list)
-        (with-png-buffer image-buffer path width height
+        (format t "skybox:0x~X~%" gl-target-num)
+        (with-sdl-image (image-buffer path width height)
           (c-gl-tex-image-2d
            gl-target-num 0 +GL_RGB+
            width height 0
@@ -164,6 +166,7 @@ void main(){
   (c-gl-bind-texture +GL_TEXTURE_CUBE_MAP+ *cube-map-id*)
 
   ;; transform
+  (loop
      (dotimes (i 360)
        (sleep (/ 1 60))
        (c-gl-clear (logior +GL_COLOR_BUFFER_BIT+ +GL_DEPTH_BUFFER_BIT+))
@@ -185,4 +188,4 @@ void main(){
                 (trans-model (mul-44-44 trans (mul-44-44 rot-mat scale-mat))))
            (gl-uniform-mat4fv "trans_model" trans-model)
            (c-gl-draw-elements +GL_TRIANGLES+ *index-length* +GL_UNSIGNED_INT+ null-pointer)))
-       (c-sdl-gl-swapwindow *window*)))
+       (c-sdl-gl-swapwindow *window*))))

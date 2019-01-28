@@ -12,7 +12,7 @@ uniform samplerCube skybox;
 uniform mat4 trans_view;
 
 // material of gold
-float mat_shininess = 0.2;
+float mat_shininess = 0.3;
 vec3 mat_ambient = vec3(0.24725, 0.1995, 0.0745);
 vec3 mat_diffuse = vec3(0.75164, 0.60648, 0.22648);
 vec3 mat_specular = vec3(0.628281, 0.555802, 0.366065);
