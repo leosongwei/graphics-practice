@@ -6,6 +6,16 @@
          (cffi:use-foreign-library "libSDL2.so")
          (cffi:use-foreign-library "libSDL2_image.so"))
 
+(cffi:defcfun (c-memcpy "memcpy") :pointer
+  (destination :pointer) (source :pointer) (size :ulong))
+;; (cffi:with-foreign-object (a :uchar 5)
+;;   (dotimes (i 5)
+;;     (setf (cffi:mem-aref a :uchar i) i))
+;;   (cffi:with-foreign-object (b :uchar 5)
+;;     (memcpy b a 5)
+;;     (dotimes (i 5)
+;;       (format t "~A~%" (cffi:mem-aref b :uchar i)))))
+
 (cffi:defcstruct sdl_rect
   (x :int) (y :int)
   (w :int) (h :int))
@@ -60,29 +70,37 @@
 ;;   (print (c-img-get-error))
 ;;   (c-img-quit))
 
-(defun power-of-2-p (num)
-  (and (not (= 0 num))
-       (= 0 (logand (1- num) num))))
+(defun o-with-sdl-image (file-name type)
+  (assert (member type '(:rgb :rgba)))
+  (sdl-image-init)
+  (let ((surface (cffi:with-foreign-string (cpath file-name)
+                   (c-img-load cpath))))
+    (if (cffi:null-pointer-p surface)
+        (error (format nil "with-sdl-image error: ~A~%" (c-img-get-error))))
+    (let* ((width (the (signed-byte 32) (sdl-surface-attrib surface 'w)))
+           (height (the (signed-byte 32) (sdl-surface-attrib surface 'h)))
+           (surface-pixel-buffer (sdl-surface-attrib surface 'pixels))
+           (buffer (cffi:foreign-alloc
+                    :uchar :count (* width height
+                                     (if (eq type :rgb) 3 4))))
+           (row-size (case type (:rgb (* 3 width)) (:rgba (* 4 width))))
+           (row-surface-size (sdl-surface-attrib surface 'pitch)))
+      (dotimes (y height)
+        (let* ((row-offset-dest (* (- height (1+ y)) row-size))
+               (row-offset-src (* row-surface-size y))
+               (dest-ptr (cffi:inc-pointer buffer row-offset-dest))
+               (src-ptr (cffi:inc-pointer surface-pixel-buffer row-offset-src)))
+          (c-memcpy dest-ptr src-ptr row-size)))
+      (c-img-quit)
+      (c-sdl-free-surface surface)
+      (values buffer width height))))
 
-(defmacro with-sdl-image ((buffer-name file-name width height) &body body)
-  (let ((surface (gensym))
-        (cpath (gensym)))
-    `(progn
-       (sdl-image-init)
-       (let ((,surface (cffi:with-foreign-string (,cpath ,file-name)
-                       (c-img-load ,cpath))))
-         (if (cffi:null-pointer-p ,surface)
-             (error (format nil "with-sdl-image error: ~A~%" (c-img-get-error))))
-         (let ((,width (sdl-surface-attrib ,surface 'w))
-               (,height (sdl-surface-attrib ,surface 'h)))
-           (if (not (and (power-of-2-p ,width)
-                         (power-of-2-p ,height)))
-               (error (format nil "with-sdl-image error: size is not power of 2 (~A ~A)~%"
-                              ,width ,height)))
-           (let ((,buffer-name (sdl-surface-attrib ,surface 'pixels)))
-             ,@body)
-           (c-img-quit)
-           (c-sdl-free-surface ,surface))))))
+(defmacro with-sdl-image ((buffer-name file-name width height
+                                       &optional (type :rgb))
+                          &body body)
+  `(mvb-let* ((,buffer-name ,width ,height (o-with-sdl-image ,file-name ,type)))
+     ,@body
+     (cffi:foreign-free ,buffer-name)))
 
 ;; (aref img y x c)
 (defmacro with-png-buffer (buffer-name file-name width height &body body)

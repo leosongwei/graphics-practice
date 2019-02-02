@@ -98,7 +98,7 @@ void main(){
   ;; Texture
   (defparameter *texture-id* (gl-gen-texute-1))
   (c-gl-bind-texture +GL_TEXTURE_2D+ *texture-id*)
-  (with-png-buffer image-buffer "./img/th06.png" width height
+  (with-sdl-image (image-buffer "./img/th06.png" width height)
     (c-gl-tex-image-2d
      +GL_TEXTURE_2D+ 0 +GL_RGB+
      width height 0

@@ -9,7 +9,7 @@
   (defparameter *window*
     (cffi:with-foreign-string (title "test")
       (c-sdl-createwindow title +sdl_windowpos_undefined+ +sdl_windowpos_undefined+
-                          640 480
+                          1024 768
                           (logior +sdl_window_opengl+ +sdl_window_shown+))))
 
   (defparameter *glcontext*
@@ -166,15 +166,15 @@ void main(){
   (c-gl-bind-texture +GL_TEXTURE_CUBE_MAP+ *cube-map-id*)
 
   ;; transform
-  (loop
+  (progn
      (dotimes (i 360)
        (sleep (/ 1 60))
        (c-gl-clear (logior +GL_COLOR_BUFFER_BIT+ +GL_DEPTH_BUFFER_BIT+))
        (let* ((project-mat (frustum-mat 7.5 (/ 4 3) 0.1 15))
-              (trans-view (3d-trans-mat 0.05 -0.35 -10.0))
+              (trans-view (3d-trans-mat 0.05 -0.45 -10.0))
               ;; --
               (rot-mat (3d-rotate-y i))
-              (scale-mat (3d-scale 5.0))
+              (scale-mat (3d-scale 7.0))
               (trans-model (mul-44-44 rot-mat scale-mat)))
          (gl-uniform-mat4fv "projection" project-mat)
          (gl-uniform-mat4fv "trans_view" trans-view)
