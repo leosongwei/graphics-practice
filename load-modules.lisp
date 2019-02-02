@@ -1,5 +1,5 @@
 (require :cffi)
-(require :png)
+;; (require :png)
 (require :parse-number)
 (load "utils")
 (load "math")

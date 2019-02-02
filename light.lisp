@@ -9,7 +9,7 @@
   (defparameter *window*
     (cffi:with-foreign-string (title "test")
       (c-sdl-createwindow title +sdl_windowpos_undefined+ +sdl_windowpos_undefined+
-                          640 480
+                          1024 768
                           (logior +sdl_window_opengl+ +sdl_window_shown+))))
 
   (defparameter *glcontext*
@@ -152,13 +152,13 @@ void main(){
     ;;;; Texture
     (defparameter *texture-id* (gl-gen-texute-1))
     (c-gl-bind-texture +GL_TEXTURE_2D+ *texture-id*)
-    (with-png-buffer image-buffer "./img/wood.png" width height
+    (with-sdl-image (image-buffer "./img/wood.png" width height)
       (c-gl-tex-image-2d
        +GL_TEXTURE_2D+ 0 +GL_RGB+
        width height 0
        +GL_RGB+ +GL_UNSIGNED_BYTE+
        image-buffer))
-    ;; (c-gl-generate-mipmap +GL_TEXTURE_2D+)
+    (c-gl-generate-mipmap +GL_TEXTURE_2D+)
     (c-gl-tex-parameter-i +GL_TEXTURE_2D+ +GL_TEXTURE_MAG_FILTER+ +GL_LINEAR+)
     (c-gl-tex-parameter-i +GL_TEXTURE_2D+ +GL_TEXTURE_MIN_FILTER+ +GL_LINEAR+)))
 
@@ -179,7 +179,7 @@ void main(){
            (trans-view (3d-trans-mat 0.05 -0.35 -10.0))
            ;; --
            (rot-mat (3d-rotate-y i))
-           (scale-mat (3d-scale 5.0))
+           (scale-mat (3d-scale 6.0))
            (trans-model (mul-44-44 rot-mat scale-mat)))
       (gl-uniform-mat4fv "projection" project-mat)
       (gl-uniform-mat4fv "trans_view" trans-view)

@@ -102,32 +102,6 @@
      ,@body
      (cffi:foreign-free ,buffer-name)))
 
-;; (aref img y x c)
-(defmacro with-png-buffer (buffer-name file-name width height &body body)
-  (let ((image (gensym))
-        (input (gensym))
-        (channels (gensym))
-        (buffer-size (gensym))
-        (x (gensym)) (y (gensym)) (c (gensym)))
-    `(let* ((,image (with-open-file (,input ,file-name
-                                            :element-type '(unsigned-byte 8))
-                      (png:decode ,input)))
-            (,width (png:image-width ,image))
-            (,height (png:image-height ,image))
-            (,channels (png:image-channels ,image))
-            (,buffer-size (* ,width ,height ,channels)))
-       (cffi:with-foreign-object (,buffer-name :uint8 ,buffer-size)
-         (dotimes (,x ,width)
-           (dotimes (,y ,height)
-             (dotimes (,c ,channels)
-               (setf (cffi:mem-aref ,buffer-name :uint8
-                                    (+ ,c
-                                       (* ,x ,channels)
-                                       (* ,y (* ,width ,channels))))
-                     (aref ,image (- ,height ,y 1) ,x ,c)))))
-         ,@body))))
-
-
 (defun c-sizeof (type)
   (cffi:foreign-type-size type))
 
