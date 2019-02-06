@@ -3,7 +3,15 @@ Graphics Practice
 
 Computer graphics practice, written in OpenGL and Common Lisp
 
-Requirement:
+License
+-------
+
+The code in this repo is in the public domain, use at your own risk.
+
+The resources in `./img` might have some copyright issues.
+
+Requirement
+-----------
 
 * SBCL
 * SDL2
