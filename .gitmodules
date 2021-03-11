@@ -1,0 +1,3 @@
+[submodule "handy-sdl"]
+	path = handy-sdl
+	url = https://github.com/leosongwei/handy-sdl.git
