@@ -4,7 +4,7 @@
          (cffi:use-foreign-library "libGL.so")
          (cffi:use-foreign-library "libGLX.so")
          (cffi:use-foreign-library "libSDL2.so")
-         (cffi:use-foreign-library "libSDL2_image.so"))
+         (cffi:use-foreign-library "libSDL_image-1.2.so.0"))
 
 (cffi:defcfun (c-memcpy "memcpy") :pointer
   (destination :pointer) (source :pointer) (size :ulong))
