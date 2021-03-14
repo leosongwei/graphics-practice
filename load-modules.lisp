@@ -1,4 +1,6 @@
 (require :cffi)
+(push #p"./handy-sdl/" asdf:*central-registry*)
+(require :handy-sdl)
 (load "utils")
 (load "math")
 (load "model")

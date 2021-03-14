@@ -1,19 +1,28 @@
 (load "load-modules.lisp")
 
 (progn
-  (c-sdl-init +sdl_init_video+)
-  (c-sdl-gl-setattribute +sdl_gl_context_major_version+ 3)
-  (c-sdl-gl-setattribute +sdl_gl_context_major_version+ 3)
-  (c-sdl-gl-setattribute +sdl_gl_context_profile_mask+ +sdl_gl_context_profile_core+)
+  ;; (c-sdl-init +sdl_init_video+)
+  ;; (c-sdl-gl-setattribute +sdl_gl_context_major_version+ 3)
+  ;; (c-sdl-gl-setattribute +sdl_gl_context_major_version+ 3)
+  ;; (c-sdl-gl-setattribute +sdl_gl_context_profile_mask+ +sdl_gl_context_profile_core+)
+  (handy-sdl:sdl-init '(:sdl_init_video))
+  (handy-sdl:sdl-gl-setattribute :sdl_gl_context_major_version 3)
+  (handy-sdl:sdl-gl-setattribute :sdl_gl_context_minor_version 3)
+  (handy-sdl:sdl-gl-set-context-profile-mask :sdl_gl_context_profile_core)
 
+  ;; (defparameter *window*
+  ;;   (cffi:with-foreign-string (title "test")
+  ;;     (c-sdl-createwindow title +sdl_windowpos_undefined+ +sdl_windowpos_undefined+
+  ;;                         640 480
+  ;;                         (logior +sdl_window_opengl+ +sdl_window_shown+))))
   (defparameter *window*
-    (cffi:with-foreign-string (title "test")
-      (c-sdl-createwindow title +sdl_windowpos_undefined+ +sdl_windowpos_undefined+
-                          640 480
-                          (logior +sdl_window_opengl+ +sdl_window_shown+))))
+    (handy-sdl:sdl-create-window "test" 0 0 640 480
+                                 '(:SDL_WINDOW_OPENGL)))
 
+  ;;(defparameter *glcontext*
+  ;;  (c-sdl-gl-createcontext *window*))
   (defparameter *glcontext*
-    (c-sdl-gl-createcontext *window*))
+    (handy-sdl:sdl-gl-createcontext *window*))
 
   (c-glewinit)
   ;;(c-gl-enable +gl_depth_test+)
@@ -22,7 +31,9 @@
   (progn
     (c-gl-clear-color 0.2 0.2 0.2 0.0)
     (c-gl-clear (logior +GL_COLOR_BUFFER_BIT+ +GL_DEPTH_BUFFER_BIT+)))
-  (c-sdl-gl-swapwindow *window*))
+
+  ;;(c-sdl-gl-swapwindow *window*)
+  (handy-sdl:sdl-gl-swapwindow *window*))
 
 
 
@@ -50,9 +61,11 @@ color = vec3(1,0,0); // red
   (defparameter *vertex-shader-id*
     (compile-shader-from-string +GL_VERTEX_SHADER+ *vertex-shader-string*))
   (format t "vs id:~A~%" *vertex-shader-id*)
+  (c-gl-get-error)
   (defparameter *fragment-shader-id*
     (compile-shader-from-string +GL_FRAGMENT_SHADER+ *fragment-shader-string*))
   (format t "fs id:~A~%" *fragment-shader-id*)
+
 
   (defparameter *shader-program-id* (create-program-with-shaders *vertex-shader-id*
                                                                  *fragment-shader-id*))
@@ -88,6 +101,8 @@ color = vec3(1,0,0); // red
   ;; draw array
   (c-gl-draw-arrays +gl_triangles+ 0 3)
 
-  (c-sdl-gl-swapwindow *window*))
+  ;;(c-sdl-gl-swapwindow *window*)
+  (handy-sdl:sdl-gl-swapwindow *window*)
+)
 
 (c-gl-get-error)
