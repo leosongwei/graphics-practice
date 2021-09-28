@@ -23,32 +23,32 @@ Load files: `sbcl --load triangle.lisp`
 
 * `triangle.lisp`
   - Basic draw array
-  - <img src="img/triangle.png" width=200 />
+  - <img src="resources/triangle.png" width=200 />
 * `quad.lisp`
   - Draw with EBO
-  - <img src="img/quad.png" width=200 />
+  - <img src="resources/quad.png" width=200 />
 * `color.lisp`
   - The color of the quad changing over time.
   - Passing color value to Shader program using uniform
   - 2 different Shader programs
-  - <img src="img/color.png" width=200 />
+  - <img src="resources/color.png" width=200 />
 * `texture.lisp`
   - load texture
-  - <img src="img/texture.png" width=200/>
+  - <img src="resources/texture.png" width=200/>
 * `perspective.lisp`
   - load obj model
   - projection
-  - <img src="img/perspective.png" width=200/>
+  - <img src="resources/perspective.png" width=200/>
 * `light.lisp`
   - ambient, diffuse, specular
-  - <img src="img/light.png" width=200/>
+  - <img src="resources/light.png" width=200/>
 * `normalmap.lisp`
   - normal map
-  - <img src="img/normalmap.png" width=200/>
+  - <img src="resources/normalmap.png" width=200/>
 * `gold.lisp`
   - material
   - cube map
-  - <img src="img/gold.png" width=200/>
+  - <img src="resources/gold.png" width=200/>
 
 Acknowledgement
 ---------------
