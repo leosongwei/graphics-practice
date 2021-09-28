@@ -3,6 +3,8 @@ Graphics Practice
 
 Computer graphics practice, written in OpenGL and Common Lisp
 
+Rewriting!
+
 License
 -------
 
@@ -24,28 +26,28 @@ Load files: `sbcl --load triangle.lisp`
 * `triangle.lisp`
   - Basic draw array
   - <img src="resources/triangle.png" width=200 />
-* `quad.lisp`
+* ~~`quad.lisp`~~
   - Draw with EBO
   - <img src="resources/quad.png" width=200 />
-* `color.lisp`
+* ~~`color.lisp`~~
   - The color of the quad changing over time.
   - Passing color value to Shader program using uniform
   - 2 different Shader programs
   - <img src="resources/color.png" width=200 />
-* `texture.lisp`
+* ~~`texture.lisp`~~
   - load texture
   - <img src="resources/texture.png" width=200/>
-* `perspective.lisp`
+* ~~`perspective.lisp`~~
   - load obj model
   - projection
   - <img src="resources/perspective.png" width=200/>
-* `light.lisp`
+* ~~`light.lisp`~~
   - ambient, diffuse, specular
   - <img src="resources/light.png" width=200/>
-* `normalmap.lisp`
+* ~~`normalmap.lisp`~~
   - normal map
   - <img src="resources/normalmap.png" width=200/>
-* `gold.lisp`
+* ~~`gold.lisp`~~
   - material
   - cube map
   - <img src="resources/gold.png" width=200/>
