@@ -11,3 +11,18 @@
                                     :initial-contents ,lisp-array)))
      (unwind-protect (progn ,@body)
        (cffi:foreign-free ,name))))
+
+(cffi:foreign-type-size '%gl:boolean)
+
+(defun gl-type-to-cffi-type (gl-type)
+  (ecase gl-type
+    (:float :float)
+    (:double :double)
+    (:int :int32)
+    (:unsigned-int :uint32)
+    (:bool :uint8)
+    (:byte :int8)
+    (:short :int16)
+    (:ushort :uint16)
+    (:int64 :int64)
+    (:uint64 :uint64)))

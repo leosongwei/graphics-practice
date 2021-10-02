@@ -24,7 +24,7 @@
 (sdl2-ffi.functions:sdl-gl-swap-window *window*)
 
 (progn
-  (defparameter *vertex-shader-string*
+  (defparameter *quad-vertex-shader*
     "
 #version 330 core
 layout(location = 0) in vec2 vertexPosition_modelspace;
@@ -35,7 +35,7 @@ void main(){
 }
 ")
 
-  (defparameter *fragment-shader-string*
+  (defparameter *quad-fragment-shader*
     "
 #version 330 core
 out vec3 color;
@@ -47,56 +47,119 @@ void main(){
     color.r = 0.2;
     color.b = 0.2;
 }
-"))
+")
 
-(let* ((vs (compile-shader-from-string :vertex-shader *vertex-shader-string*))
-       (fs (compile-shader-from-string :fragment-shader *fragment-shader-string*)))
-  (defparameter *shader-program* (create-program-with-shaders vs fs))
-  (gl:use-program *shader-program*)
-  (gl:delete-shader vs)
-  (gl:delete-shader fs))
+  (let* ((vs (compile-shader-from-string :vertex-shader *quad-vertex-shader*))
+         (fs (compile-shader-from-string :fragment-shader *quad-fragment-shader*)))
+    (defparameter *quad-shader-program* (create-program-with-shaders vs fs))
+    (gl:delete-shader vs)
+    (gl:delete-shader fs)))
+
+(progn
+  (defparameter *triangle-vertex-shader*
+    "
+#version 330 core
+layout(location = 0) in vec2 vertexPosition_modelspace;
+layout(location = 1) in vec3 vertexColor;
+
+out vec3 vColor;
+
+void main(){
+    gl_Position.xy = vertexPosition_modelspace;
+    gl_Position.z = 0.0;
+    gl_Position.w = 1.0;
+    vColor = vertexColor;
+}
+")
+
+  (defparameter *triangle-fragment-shader*
+    "
+#version 330 core
+in vec3 vColor;
+out vec3 color;
+
+uniform float ourColor;
+
+void main(){
+    color = vColor;
+}
+")
+
+  (let* ((vs (compile-shader-from-string :vertex-shader *triangle-vertex-shader*))
+         (fs (compile-shader-from-string :fragment-shader *triangle-fragment-shader*)))
+    (defparameter *triangle-shader-program* (create-program-with-shaders vs fs))
+    (gl:delete-shader vs)
+    (gl:delete-shader fs)))
+
+(defun make-vao (vertex-array attrib-lengths-and-gl-types indicies-array)
+  (let ((vao (gl:gen-vertex-array))
+        (vbo (gl:gen-buffer))
+        (ebo (gl:gen-buffer)))
+    (gl:bind-vertex-array vao)
+    (gl:bind-buffer :array-buffer vbo)
+    (with-c-buffer (buffer vertex-array :float)
+      (%gl:buffer-data :array-buffer (* (length vertex-array) (cffi:foreign-type-size :float))
+                       buffer :static-draw))
+    (gl:bind-buffer :element-array-buffer ebo)
+    (with-c-buffer (buffer indicies-array :uint32)
+      (%gl:buffer-data :element-array-buffer (* (length indicies-array) (cffi:foreign-type-size :uint32))
+                       buffer :static-draw))
+    (let ((attrib-index 0)
+          (offset 0)
+          (attrib-total-size
+            (let ((size 0))
+              (dolist (attrib-length-and-gl-type attrib-lengths-and-gl-types size)
+                (destructuring-bind (attrib-length gl-type) attrib-length-and-gl-type
+                  (setf size (+ size
+                                (* attrib-length (cffi:foreign-type-size
+                                                  (gl-type-to-cffi-type gl-type))))))))))
+      (mapcar (lambda (attrib-length-and-gl-type)
+                (destructuring-bind (attrib-length gl-type) attrib-length-and-gl-type
+                  (let* ((cffi-type (gl-type-to-cffi-type gl-type))
+                         (attrib-size (* attrib-length (cffi:foreign-type-size cffi-type))))
+                    (gl:vertex-attrib-pointer attrib-index attrib-length
+                                              gl-type nil attrib-total-size
+                                              (cffi:make-pointer offset))
+                    (setf offset (+ offset attrib-size))
+                    (gl:enable-vertex-attrib-array attrib-index)
+                    (incf attrib-index))))
+              attrib-lengths-and-gl-types))
+    vao))
 
 (defparameter *quad-points*
-  #(-0.5 0.5
-    0.5 0.5
-    -0.5 -0.5
-    0.5 -0.5))
+  #(-0.9 0.5
+    -0.1 0.5
+    -0.9 -0.5
+    -0.1 -0.5))
+(defparameter *quad-indicies* #(0 3 1 0 2 3))
+(defparameter *quad-vao* (make-vao *quad-points* '((2 :float)) *quad-indicies*))
 
-;; generate vao
-(defparameter *vertex-array* (gl:gen-vertex-array))
-(gl:bind-vertex-array *vertex-array*)
-
-;; generate vbo
-(defparameter *vertex-buffer* (gl:gen-buffer))
-(gl:bind-buffer :array-buffer *vertex-buffer*)
-
-;; send data to vbo
-(with-float-buffer (buffer *quad-points*)
-  (%gl:buffer-data :array-buffer (* 4 (length *quad-points*))
-                   buffer :static-draw))
-
-;; EBO points
-(defparameter *ebo-indicies* #(0 3 1 0 2 3))
-(defparameter *ebo* (gl:gen-buffer))
-(gl:bind-buffer :element-array-buffer *ebo*)
-(with-c-buffer (buffer *ebo-indicies* :uint32)
-  (%gl:buffer-data :element-array-buffer (* 4 (length *ebo-indicies*))
-                  buffer :static-draw))
-
-;; set shader vertex attrib pointer
-(gl:vertex-attrib-pointer 0 2 :float nil (* 4 2) (cffi:null-pointer))
-(gl:enable-vertex-attrib-array 0)
-(gl:bind-vertex-array *vertex-array*)
+(defparameter *triangle*
+  ;; vec2: coord, vec3 color
+  #(0.5 0.5  1.0 0.1 0.1
+    0.1 -0.5 0.1 1.0 0.1
+    0.9 -0.5 0.1 0.1 1.0))
+(defparameter *triangle-indicies* #(0 1 2))
+(defparameter *triangle-vao*
+  (make-vao *triangle* '((2 :float) (3 :float)) *triangle-indicies*))
 
 (let* ((time 0)
-       (location (gl:get-uniform-location *shader-program* "ourColor")))
+       (location (gl:get-uniform-location *quad-shader-program* "ourColor")))
   (loop
     (gl:clear :color-buffer-bit :depth-buffer-bit)
     (sleep 0.01)
+
     (incf time)
+    (gl:bind-vertex-array *quad-vao*)
+    (gl:use-program *quad-shader-program*)
     (let ((green (+ 0.2 (* 0.8 (/ (+ 1(sin (/ time 50.0))) 2.0)))))
       (gl:uniformf location green))
     (%gl:draw-elements :triangles 6 :unsigned-int 0)
+
+    (gl:bind-vertex-array *triangle-vao*)
+    (gl:use-program *triangle-shader-program*)
+    (%gl:draw-elements :triangles 3 :unsigned-int 0)
+
     (sdl2-ffi.functions:sdl-gl-swap-window *window*)))
 
 
