@@ -91,7 +91,7 @@ void main(){
     (gl:delete-shader vs)
     (gl:delete-shader fs)))
 
-(defun make-vao (vertex-array attrib-lengths-and-gl-types indicies-array)
+(defun make-vao (vertex-array indicies-array attrib-lengths-and-gl-types)
   (let ((vao (gl:gen-vertex-array))
         (vbo (gl:gen-buffer))
         (ebo (gl:gen-buffer)))
@@ -132,7 +132,7 @@ void main(){
     -0.9 -0.5
     -0.1 -0.5))
 (defparameter *quad-indicies* #(0 3 1 0 2 3))
-(defparameter *quad-vao* (make-vao *quad-points* '((2 :float)) *quad-indicies*))
+(defparameter *quad-vao* (make-vao *quad-points* *quad-indicies* '((2 :float))))
 
 (defparameter *triangle*
   ;; vec2: coord, vec3 color
@@ -141,7 +141,7 @@ void main(){
     0.9 -0.5 0.1 0.1 1.0))
 (defparameter *triangle-indicies* #(0 1 2))
 (defparameter *triangle-vao*
-  (make-vao *triangle* '((2 :float) (3 :float)) *triangle-indicies*))
+  (make-vao *triangle* *triangle-indicies* '((2 :float) (3 :float))))
 
 (let* ((time 0)
        (location (gl:get-uniform-location *quad-shader-program* "ourColor")))
@@ -152,7 +152,7 @@ void main(){
     (incf time)
     (gl:bind-vertex-array *quad-vao*)
     (gl:use-program *quad-shader-program*)
-    (let ((green (+ 0.2 (* 0.8 (/ (+ 1(sin (/ time 50.0))) 2.0)))))
+    (let ((green (+ 0.2 (* 0.8 (/ (+ 1 (sin (/ time 25.0))) 2.0)))))
       (gl:uniformf location green))
     (%gl:draw-elements :triangles 6 :unsigned-int 0)
 
