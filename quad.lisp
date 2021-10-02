@@ -27,9 +27,10 @@
   (defparameter *vertex-shader-string*
     "
 #version 330 core
-layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 0) in vec2 vertexPosition_modelspace;
 void main(){
-    gl_Position.xyz = vertexPosition_modelspace;
+    gl_Position.xy = vertexPosition_modelspace;
+    gl_Position.z = 0.0;
     gl_Position.w = 1.0;
 }
 ")
@@ -50,10 +51,11 @@ color = vec3(1,0,0); // red
   (gl:delete-shader vs)
   (gl:delete-shader fs))
 
-(defparameter *triangle-points*
-  #(-1.0 -1.0  0.0
-    1.0 -1.0  0.0
-    0.0  1.0  0.0))
+(defparameter *quad-points*
+  #(-0.5 0.5
+    0.5 0.5
+    -0.5 -0.5
+    0.5 -0.5))
 
 ;; generate vao
 (defparameter *vertex-array* (gl:gen-vertex-array))
@@ -64,19 +66,28 @@ color = vec3(1,0,0); // red
 (gl:bind-buffer :array-buffer *vertex-buffer*)
 
 ;; send data to vbo
-(with-float-buffer (buffer *triangle-points*)
-  (%gl:buffer-data :array-buffer (* 4 (length *triangle-points*))
+(with-float-buffer (buffer *quad-points*)
+  (%gl:buffer-data :array-buffer (* 4 (length *quad-points*))
                    buffer :static-draw))
 
-;; set shader vertex attrib pointer
-(gl:enable-vertex-attrib-array 0)
-(gl:vertex-attrib-pointer 0 3 :float nil 0 (cffi:null-pointer))
+;; EBO points
+(defparameter *ebo-indicies* #(0 3 1 0 2 3))
+(defparameter *ebo* (gl:gen-buffer))
+(gl:bind-buffer :element-array-buffer *ebo*)
+(with-c-buffer (buffer *ebo-indicies* :uint32)
+  (%gl:buffer-data :element-array-buffer (* 4 (length *ebo-indicies*))
+                  buffer :static-draw))
 
+;; set shader vertex attrib pointer
+(gl:vertex-attrib-pointer 0 2 :float nil (* 4 2) (cffi:null-pointer))
+(gl:enable-vertex-attrib-array 0)
 (gl:bind-vertex-array *vertex-array*)
-;;(gl:polygon-mode :front-and-back :line)
+
+(gl:polygon-mode :front-and-back :line)
 ;;(gl:polygon-mode :front-and-back :fill)
-(gl:draw-arrays :triangles 0 3)
+(%gl:draw-elements :triangles 6 :unsigned-int 0)
 (sdl2-ffi.functions:sdl-gl-swap-window *window*)
+(gl:clear :color-buffer-bit :depth-buffer-bit)
 
 (read-char *standard-input* nil #\q)
 (gl:use-program 0)
