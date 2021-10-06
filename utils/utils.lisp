@@ -26,3 +26,38 @@
     (:ushort :uint16)
     (:int64 :int64)
     (:uint64 :uint64)))
+
+(defun make-vao (vertex-array indicies-array attrib-lengths-and-gl-types)
+  (let ((vao (gl:gen-vertex-array))
+        (vbo (gl:gen-buffer))
+        (ebo (gl:gen-buffer)))
+    (gl:bind-vertex-array vao)
+    (gl:bind-buffer :array-buffer vbo)
+    (with-c-buffer (buffer vertex-array :float)
+      (%gl:buffer-data :array-buffer (* (length vertex-array) (cffi:foreign-type-size :float))
+                       buffer :static-draw))
+    (gl:bind-buffer :element-array-buffer ebo)
+    (with-c-buffer (buffer indicies-array :uint32)
+      (%gl:buffer-data :element-array-buffer (* (length indicies-array) (cffi:foreign-type-size :uint32))
+                       buffer :static-draw))
+    (let ((attrib-index 0)
+          (offset 0)
+          (attrib-total-size
+            (let ((size 0))
+              (dolist (attrib-length-and-gl-type attrib-lengths-and-gl-types size)
+                (destructuring-bind (attrib-length gl-type) attrib-length-and-gl-type
+                  (setf size (+ size
+                                (* attrib-length (cffi:foreign-type-size
+                                                  (gl-type-to-cffi-type gl-type))))))))))
+      (mapcar (lambda (attrib-length-and-gl-type)
+                (destructuring-bind (attrib-length gl-type) attrib-length-and-gl-type
+                  (let* ((cffi-type (gl-type-to-cffi-type gl-type))
+                         (attrib-size (* attrib-length (cffi:foreign-type-size cffi-type))))
+                    (gl:vertex-attrib-pointer attrib-index attrib-length
+                                              gl-type nil attrib-total-size
+                                              (cffi:make-pointer offset))
+                    (setf offset (+ offset attrib-size))
+                    (gl:enable-vertex-attrib-array attrib-index)
+                    (incf attrib-index))))
+              attrib-lengths-and-gl-types))
+    vao))
