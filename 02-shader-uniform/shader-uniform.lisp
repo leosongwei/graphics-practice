@@ -1,4 +1,4 @@
-(load "load-libs")
+(load "../load-libs")
 
 (progn
   (sdl2-ffi.functions:sdl-init sdl2-ffi:+sdl-init-video+)
