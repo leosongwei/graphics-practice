@@ -61,3 +61,17 @@
                     (incf attrib-index))))
               attrib-lengths-and-gl-types))
     vao))
+
+(defun make-2d-texture (filename)
+  (let* ((gl-texture (gl:gen-texture)))
+    (gl:bind-texture :texture-2d gl-texture)
+    (gl:tex-parameter :texture-2d :texture-wrap-s :repeat)
+    (gl:tex-parameter :texture-2d :texture-wrap-t :repeat)
+    (gl:tex-parameter :texture-2d :texture-min-filter :linear-mipmap-linear)
+    (gl:tex-parameter :texture-2d :texture-mag-filter :linear)
+    (stb:stbi-set-flip-vertically-on-load t)
+    (stb:with-stbi-load (image-pointer w h channels) filename
+      channels ;; ignore
+      (gl:tex-image-2d :texture-2d 0 :rgb w h 0 :rgb :unsigned-byte image-pointer))
+    (gl:generate-mipmap :texture-2d)
+    gl-texture))

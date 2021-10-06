@@ -1,4 +1,5 @@
 (in-package #:cl-user)
+
 (defpackage #:stb
   (:use #:cl
         #:cffi)

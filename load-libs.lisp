@@ -10,7 +10,7 @@
   (cffi:use-foreign-library "libSDL_image-1.2.so.0")
   (cffi:use-foreign-library "libstb.so.0"))
 
-(load "../utils/utils")
 (load "../utils/shader")
 (load "../utils/3d-cffi")
 (load "../utils/stb")
+(load "../utils/utils")
