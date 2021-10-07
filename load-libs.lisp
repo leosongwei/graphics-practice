@@ -1,6 +1,7 @@
 (ql:quickload 'sdl2)
 (ql:quickload 'cl-opengl)
 (ql:quickload '3d-matrices)
+(ql:quickload 'uiop)
 
 (progn
   (cffi:use-foreign-library "libGLEW.so")
