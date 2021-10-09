@@ -45,6 +45,8 @@ Lisp libraries:
   - Handy to represent and calculate graphics math.
 * uiop
   - Everything need this
+* cl-cxx-jit
+  - C++ binding
 
 Available so far
 ----------------
